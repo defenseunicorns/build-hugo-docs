@@ -63,8 +63,10 @@ const getFilesFromDirectory = async directoryPath => {
 
       if (stats.isDirectory()) {
         return getFilesFromDirectory(filePath)
-      } else {
+      } else if (filePath.match(mdFiles)) {
         return filePath
+      } else {
+        return []
       }
     }),
     // .filter(file => file.match(mdFiles)),
