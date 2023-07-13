@@ -7,12 +7,13 @@ const matter = require('gray-matter')
 const fs = require('fs/promises')
 const yargs = require('yargs')
 const { exit } = require('process')
+const path = require('path')
 
 async function getFileCOntents(file) {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
@@ -35,8 +36,6 @@ const getUserInput = () => {
 const buildFrontMatter = (params = []) => {
   const delim = ['---\n']
 
-  console.log(params)
-
   const fm = [...delim, ...params, ...delim]
 
   return fm.join('')
@@ -46,10 +45,32 @@ const getTitle = content => {
   // const h1 = /^'\s*#\s.+/
   const h1 = /^#\s.+/
 
-  const title = content.find(el => el.match(h1)).replace('# ', '')
-  const body = content.filter(el => !el.match(h1))
+  const header = content.find(el => el.match(h1))
+  const title = header.replace('# ', '')
+  const body = content.filter(el => !el.match(header))
 
   return [title, body]
+}
+
+const getFilesFromDirectory = async directoryPath => {
+  const mdFiles = /\w+\.md$/
+  const filesInDirectory = await fs.readdir(directoryPath)
+
+  const files = await Promise.all(
+    filesInDirectory.map(async file => {
+      const filePath = path.join(directoryPath, file)
+      const stats = await fs.stat(filePath)
+
+      if (stats.isDirectory()) {
+        return getFilesFromDirectory(filePath)
+      } else {
+        return filePath
+      }
+    }),
+    // .filter(file => file.match(mdFiles)),
+  )
+  console.log(files)
+  return files.filter(file => file.length) // return with empty arrays removed
 }
 
 const add = async () => {
@@ -68,10 +89,12 @@ const add = async () => {
 
   const content = [...buildFrontMatter(frontMatterValues), ...body.join('\n')]
 
+  console.log(await getFilesFromDirectory('/Users/bryan/_git/du/zarf/docs'))
+
   try {
     await fs.writeFile(`${getFileName(inputFile)}.new`, content)
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
