@@ -1,0 +1,25 @@
+{
+  "name": "add-frontmatter",
+  "version": "1.0.0",
+  "description": "A CLI to translate between languages in the terminal.",
+  "main": "bin/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Rushan Khan",
+  "license": "ISC",
+  "keywords": [],
+  "bin": {
+    "tran": "./bin/index.js"
+  },
+  "dependencies": {
+    "@vitalets/google-translate-api": "^7.0.0",
+    "boxen": "^4.2.0",
+    "chalk": "^4.1.1",
+    "gray-matter": "^4.0.3",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}
