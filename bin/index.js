@@ -1,6 +1,6 @@
 #! /usr/bin/env node
 
-import { exit } from 'process'
+import path from 'path'
 
 import fs from 'fs/promises'
 import matter from 'gray-matter'
@@ -16,12 +16,7 @@ async function getFileContents(file) {
   }
 }
 
-const getFileName = input => {
-  if (!input) {
-    showHelp()
-    exit(1)
-  }
-
+const getLastPathValue = input => {
   return input.split('/'.slice(-1))
 }
 
@@ -44,10 +39,18 @@ const getTitle = content => {
   return [title, body]
 }
 
-const getFilesForPaths = async paths => {
+const getFilesForPaths = async searchPaths => {
   const files = await Promise.all(
-    paths.map(async path => {
-      return await getFilesFromDirectory(path)
+    searchPaths.map(async searchPath => {
+      const found = await getFilesFromDirectory(searchPath)
+      return found.map(file => {
+        const filePath = file.split('/')
+        filePath.shift()
+
+        const sectionPath = path.basename(searchPath)
+
+        return { searchPath, sectionPath, filePath: filePath.join('/') }
+      })
     }),
   )
 
@@ -76,13 +79,21 @@ const add = async () => {
   const { paths, outdir } = getUserInput()
 
   const files = await getFilesForPaths(paths)
-  const converted = await convertFile(files[0])
-  console.log(converted)
 
-  exit()
+  const converted = await Promise.all(
+    await files.map(async file => {
+      const content = await convertFile(`${file.sectionPath}/${file.filePath}`)
+      return { ...file, content }
+    }),
+  )
 
   try {
-    await fs.writeFile(`${getFileName(inputFile)}.new`, content)
+    await converted.map(async item => {
+      const writePath = `${outdir}/${item.sectionPath}/${item.filePath}`
+      await fs.mkdir(path.dirname(writePath), { recursive: true })
+      await fs.writeFile(writePath, item.content)
+      console.log(`Creating:  ${writePath}`)
+    })
   } catch (err) {
     console.error(err)
   }
