@@ -1,0 +1,4 @@
+paths:
+  - './test'
+
+outdir: './docs'

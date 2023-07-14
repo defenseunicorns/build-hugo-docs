@@ -1,15 +1,14 @@
 #! /usr/bin/env node
 
-const chalk = require('chalk')
-const boxen = require('boxen')
-const utils = require('./utils')
-const matter = require('gray-matter')
-const fs = require('fs/promises')
-const yargs = require('yargs')
-const { exit } = require('process')
-const path = require('path')
+import { exit } from 'process'
 
-async function getFileCOntents(file) {
+import fs from 'fs/promises'
+import matter from 'gray-matter'
+
+import { getUserInput } from '../src/cli.js'
+import { getFilesFromDirectory } from '../src/utils.js'
+
+async function getFileContents(file) {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
   } catch (err) {
@@ -19,18 +18,11 @@ async function getFileCOntents(file) {
 
 const getFileName = input => {
   if (!input) {
-    utils.showHelp()
+    showHelp()
     exit(1)
   }
 
-  return input.split('/').slice(-1)
-}
-
-const getUserInput = () => {
-  const usage = chalk.keyword('violet')('\nUsage: frontmatter <file>')
-
-  const opts = yargs.usage(usage).help(true).argv
-  return opts._[0]
+  return input.split('/'.slice(-1))
 }
 
 const buildFrontMatter = (params = []) => {
@@ -52,46 +44,42 @@ const getTitle = content => {
   return [title, body]
 }
 
-const getFilesFromDirectory = async directoryPath => {
-  const mdFiles = /\w+\.md$/
-  const filesInDirectory = await fs.readdir(directoryPath)
-
+const getFilesForPaths = async paths => {
   const files = await Promise.all(
-    filesInDirectory.map(async file => {
-      const filePath = path.join(directoryPath, file)
-      const stats = await fs.stat(filePath)
-
-      if (stats.isDirectory()) {
-        return getFilesFromDirectory(filePath)
-      } else if (filePath.match(mdFiles)) {
-        return filePath
-      } else {
-        return []
-      }
+    paths.map(async path => {
+      return await getFilesFromDirectory(path)
     }),
-    // .filter(file => file.match(mdFiles)),
   )
-  console.log(files)
-  return files.filter(file => file.length) // return with empty arrays removed
+
+  return await files.flat()
 }
 
-const add = async () => {
-  const fileData = await getFileCOntents(yargs.argv._[0])
-  const fmData = matter(fileData)
-  const inputFile = getUserInput()
+const convertFile = async inputFile => {
+  const fileContents = await getFileContents(inputFile)
+  const fmData = matter(fileContents)
+  const fileBody = fmData.content.split('\n')
 
-  const fileContent = fmData.content.split('\n')
-
-  const [title, body] = getTitle(fileContent)
+  const [title, body] = getTitle(fileBody)
 
   const frontMatterValues = [
     `title: ${title}\n`,
     fmData.data.sidebar_position ? `weight: ${fmData.data.sidebar_position}\n` : null,
   ]
 
-  const content = [...buildFrontMatter(frontMatterValues), ...body.join('\n')]
+  const frontMatter = buildFrontMatter(frontMatterValues)
 
-  console.log(await getFilesFromDirectory('/Users/bryan/_git/du/zarf/docs'))
+  // return frontMatter
+  return `${frontMatter}${body.join('\n')}`
+}
+
+const add = async () => {
+  const { paths, outdir } = getUserInput()
+
+  const files = await getFilesForPaths(paths)
+  const converted = await convertFile(files[0])
+  console.log(converted)
+
+  exit()
 
   try {
     await fs.writeFile(`${getFileName(inputFile)}.new`, content)
