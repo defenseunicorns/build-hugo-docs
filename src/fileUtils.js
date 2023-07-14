@@ -2,7 +2,7 @@ import path from 'path'
 
 import fs from 'fs/promises'
 
-export const getFilesFromDirectory = async directoryPath => {
+const getFilesFromDirectory = async directoryPath => {
   const mdFiles = /\w+\.md$/
   const filesInDirectory = await fs.readdir(directoryPath)
 
@@ -30,4 +30,27 @@ export const getFileContents = async file => {
   } catch (err) {
     console.error(err)
   }
+}
+
+export const getFilesForPaths = async searchPaths => {
+  const files = await Promise.all(
+    searchPaths.map(async searchPath => {
+      const found = await getFilesFromDirectory(searchPath)
+      return found.map(file => {
+        const filePath = file.split('/')
+        filePath.shift()
+
+        const sectionPath = path.basename(searchPath)
+
+        return { searchPath, sectionPath, filePath: filePath.join('/') }
+      })
+    }),
+  )
+
+  return await files.flat()
+}
+
+export const getFileWeight = fileName => {
+  const weight = Number(path.basename(fileName).split('-')[0])
+  return Number.isInteger(weight) ? weight : undefined
 }
