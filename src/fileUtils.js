@@ -23,3 +23,11 @@ export const getFilesFromDirectory = async directoryPath => {
   )
   return files.filter(file => file.length).flat() // return with empty arrays removed
 }
+
+export const getFileContents = async file => {
+  try {
+    return await fs.readFile(file, { encoding: 'utf8' })
+  } catch (err) {
+    console.error(err)
+  }
+}
