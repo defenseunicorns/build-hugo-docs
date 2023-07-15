@@ -6,6 +6,7 @@ const getFilesFromDirectory = async directoryPath => {
   const mdFiles = /\w+\.md$/
   try {
     const filesInDirectory = await fs.readdir(directoryPath)
+    console.log(`Reading: ${directoryPath}`)
 
     const files = await Promise.all(
       filesInDirectory.map(async file => {
@@ -22,10 +23,10 @@ const getFilesFromDirectory = async directoryPath => {
       }),
       // .filter(file => file.match(mdFiles)),
     )
+    return files.filter(file => file.length).flat() // return with empty arrays removed
   } catch (e) {
     console.error(e)
   }
-  return files.filter(file => file.length).flat() // return with empty arrays removed
 }
 
 export const getFileContents = async file => {
