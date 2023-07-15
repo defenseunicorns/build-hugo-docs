@@ -4,23 +4,27 @@ import fs from 'fs/promises'
 
 const getFilesFromDirectory = async directoryPath => {
   const mdFiles = /\w+\.md$/
-  const filesInDirectory = await fs.readdir(directoryPath)
+  try {
+    const filesInDirectory = await fs.readdir(directoryPath)
 
-  const files = await Promise.all(
-    filesInDirectory.map(async file => {
-      const filePath = path.join(directoryPath, file)
-      const stats = await fs.stat(filePath)
+    const files = await Promise.all(
+      filesInDirectory.map(async file => {
+        const filePath = path.join(directoryPath, file)
+        const stats = await fs.stat(filePath)
 
-      if (stats.isDirectory()) {
-        return getFilesFromDirectory(filePath)
-      } else if (filePath.match(mdFiles)) {
-        return filePath
-      } else {
-        return []
-      }
-    }),
-    // .filter(file => file.match(mdFiles)),
-  )
+        if (stats.isDirectory()) {
+          return getFilesFromDirectory(filePath)
+        } else if (filePath.match(mdFiles)) {
+          return filePath
+        } else {
+          return []
+        }
+      }),
+      // .filter(file => file.match(mdFiles)),
+    )
+  } catch (e) {
+    console.error(e)
+  }
   return files.filter(file => file.length).flat() // return with empty arrays removed
 }
 
