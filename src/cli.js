@@ -5,7 +5,7 @@ import yaml from 'js-yaml'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'
 
-const getConfigOptions = (path = '.md-convert.yaml') => {
+const getConfigOptions = (path = '.hugo-docs.yaml') => {
   const configPath = findUpSync(path)
   return existsSync(configPath) ? yaml.safeLoad(readFileSync(configPath, 'utf-8')) : null
 }
