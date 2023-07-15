@@ -1,14 +1,14 @@
 {
-  "name": "add-frontmatter",
-  "version": "1.0.0",
-  "description": "A CLI to translate between languages in the terminal.",
+  "name": "@defenseunicorns/hugodocs",
+  "version": "0.0.1",
+  "description": "Uses arbitrary project documentation pages to create content for embedded Hugo sites",
   "keywords": [],
-  "license": "ISC",
-  "author": "Rushan Khan",
+  "license": "APACHE 2.0",
+  "author": "Defense Unicorns",
   "type": "module",
   "main": "bin/index.js",
   "bin": {
-    "tran": "./bin/index.js"
+    "hugodocs": "./bin/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "prettier": "^3.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
