@@ -9,25 +9,32 @@ const getStartingPath = (configFile = '.hugo-docs.yaml') => {
   // return existsSync(configPath)
 }
 
-const isDirectory = async filePath => {
-  const stats = await fs.stat(filePath)
-  return stats.isDirectory()
+const isMarkdownFile = file => {
+  const mdFiles = /\w+\.md$/
+  return file.match(mdFiles)
+}
+
+const isDir = async (filePath = '') => {
+  try {
+    const stats = await fs.stat(filePath)
+    return stats.isDirectory()
+  } catch (err) {
+    const error = `isDir(${filePath}): ${JSON.stringify(err, null, 2)}`
+    throw new Error(error)
+  }
 }
 
 const getFilesFromDirectory = async directoryPath => {
-  const mdFiles = /\w+\.md$/
-
   try {
-    const filesInDirectory = (await isDirectory(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
+    const filesInDirectory = (await isDir(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
 
     const files = await Promise.all(
       filesInDirectory.map(async file => {
         const filePath = path.join(directoryPath, file)
-        const stats = await fs.stat(filePath)
 
-        if (stats.isDirectory()) {
+        if (await isDir(filePath)) {
           return getFilesFromDirectory(filePath)
-        } else if (filePath.match(mdFiles)) {
+        } else if (isMarkdownFile(filePath)) {
           return filePath
         } else {
           return []
@@ -60,7 +67,9 @@ export const getFilesForPaths = async (searchPaths = []) => {
     searchPaths.map(async searchPath => {
       const docsPath = `${getStartingPath()}/${searchPath}`
 
-      const found = await getFilesFromDirectory(docsPath)
+      console.log(docsPath)
+
+      const found = isMarkdownFile(searchPath) ? [docsPath] : await getFilesFromDirectory(docsPath)
       return found.map(filePath => {
         const sectionPath = path.basename(docsPath)
 

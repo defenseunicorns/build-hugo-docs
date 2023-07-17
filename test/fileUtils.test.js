@@ -1,16 +1,15 @@
 import { getFilesForPaths } from '../src/fileUtils'
 
 describe('Retreiving files to convert', () => {
-  let files
-  beforeAll(async () => {
-    files = await getFilesForPaths(['test'])
-  })
-
   it('Should return a list of files to be converted', async () => {
+    const files = await getFilesForPaths(['test'])
+
     expect(files.length).toBeGreaterThan(0)
   })
 
-  it('Should preserve the relative paths', () => {
+  it('Should preserve the relative paths', async () => {
+    const files = await getFilesForPaths(['test'])
+
     const testFile = '0-understand-the-basics.md'
     const expPath = 'test/path1/path2/0-u'
 
@@ -18,6 +17,11 @@ describe('Retreiving files to convert', () => {
     console.log(found)
 
     expect(found.filePath.includes(expPath)).toBe(true)
+  })
+  it('should accept files as input', async () => {
+    const files = await getFilesForPaths(['README.md'])
+
+    expect(files.length).toBeGreaterThan(0)
   })
 })
 

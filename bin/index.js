@@ -9,20 +9,18 @@ import { getFilesForPaths } from '../src/fileUtils.js'
 import convertFile from '../src/frontmatter.js'
 
 const add = async () => {
-  const { paths, outdir } = getUserInput()
-
-  console.log(paths)
-
-  const files = await getFilesForPaths(paths)
-
-  const converted = await Promise.all(
-    await files.map(async file => {
-      const content = await convertFile(file.filePath)
-      return { ...file, content }
-    }),
-  )
-
   try {
+    const { paths, outdir } = getUserInput()
+
+    const files = await getFilesForPaths(paths)
+
+    const converted = await Promise.all(
+      await files.map(async file => {
+        const content = await convertFile(file.filePath)
+        return { ...file, content }
+      }),
+    )
+
     await converted.map(async item => {
       const fullPath = `${outdir}/${item.sectionPath}/${item.filePath}`
       const name = path.basename(fullPath) === 'index.md' ? '_index.md' : path.basename(fullPath)
