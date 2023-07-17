@@ -33,7 +33,6 @@ const getFilesFromDirectory = async directoryPath => {
           return []
         }
       }),
-      // .filter(file => file.match(mdFiles)),
     )
     return files.filter(file => file.length).flat() // return with empty arrays removed
   } catch (err) {
@@ -49,7 +48,14 @@ export const getFileContents = async file => {
   }
 }
 
-export const getFilesForPaths = async searchPaths => {
+export const getFilesForPaths = async (searchPaths = []) => {
+  if (!Array.isArray(searchPaths) || searchPaths.length < 1) {
+    if (searchPaths.length < 1) {
+      throw new Error('Invalid number of search paths')
+    }
+    throw new TypeError(`Expected an array, but received a ${typeof searchPaths}`)
+  }
+
   const files = await Promise.all(
     searchPaths.map(async searchPath => {
       const docsPath = `${getStartingPath()}/${searchPath}`

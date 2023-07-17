@@ -11,6 +11,8 @@ import convertFile from '../src/frontmatter.js'
 const add = async () => {
   const { paths, outdir } = getUserInput()
 
+  console.log(paths)
+
   const files = await getFilesForPaths(paths)
 
   const converted = await Promise.all(
