@@ -15,7 +15,7 @@ const add = async () => {
 
   const converted = await Promise.all(
     await files.map(async file => {
-      const content = await convertFile(`${file.sectionPath}/${file.filePath}`)
+      const content = await convertFile(file.filePath)
       return { ...file, content }
     }),
   )

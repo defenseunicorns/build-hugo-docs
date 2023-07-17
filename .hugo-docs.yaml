@@ -1,4 +1,4 @@
 paths:
-  - './test'
+  - 'test'
 
-outdir: './docs'
+outdir: 'docs'

@@ -1,12 +1,24 @@
 import path from 'path'
 
+import { findUpSync } from 'find-up'
 import fs from 'fs/promises'
+
+const getStartingPath = (configFile = '.hugo-docs.yaml') => {
+  const configPath = path.dirname(findUpSync(configFile))
+  return configPath
+  // return existsSync(configPath)
+}
+
+const isDirectory = async filePath => {
+  const stats = await fs.stat(filePath)
+  return stats.isDirectory()
+}
 
 const getFilesFromDirectory = async directoryPath => {
   const mdFiles = /\w+\.md$/
+
   try {
-    const filesInDirectory = await fs.readdir(directoryPath)
-    console.log(`Reading: ${directoryPath}`)
+    const filesInDirectory = (await isDirectory(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
 
     const files = await Promise.all(
       filesInDirectory.map(async file => {
@@ -24,8 +36,8 @@ const getFilesFromDirectory = async directoryPath => {
       // .filter(file => file.match(mdFiles)),
     )
     return files.filter(file => file.length).flat() // return with empty arrays removed
-  } catch (e) {
-    console.error(e)
+  } catch (err) {
+    console.error(err)
   }
 }
 
@@ -40,14 +52,13 @@ export const getFileContents = async file => {
 export const getFilesForPaths = async searchPaths => {
   const files = await Promise.all(
     searchPaths.map(async searchPath => {
-      const found = await getFilesFromDirectory(searchPath)
-      return found.map(file => {
-        const filePath = file.split('/')
-        filePath.shift()
+      const docsPath = `${getStartingPath()}/${searchPath}`
 
-        const sectionPath = path.basename(searchPath)
+      const found = await getFilesFromDirectory(docsPath)
+      return found.map(filePath => {
+        const sectionPath = path.basename(docsPath)
 
-        return { searchPath, sectionPath, filePath: filePath.join('/') }
+        return { searchPath: docsPath, sectionPath, filePath }
       })
     }),
   )

@@ -1,6 +1,6 @@
 {
   "name": "@defenseunicorns/hugodocs",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Uses arbitrary project documentation pages to create content for embedded Hugo sites",
   "keywords": [],
   "homepage": "https://github.com/defenseunicorns/build-hugo-docs#readme",
