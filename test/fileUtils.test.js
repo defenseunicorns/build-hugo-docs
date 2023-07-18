@@ -66,4 +66,14 @@ describe('Constructing path to save file', () => {
 
     expect(result.fileName).toEqual('_index.md')
   })
+  it('should not remove subsections that repeat the docSection name ', () => {
+    const root = 'content'
+    const docSection = 'docs'
+    const currentPath = '/build-hugo-docs/docs/path1/docs/path2/bob.md'
+    const expected = 'content/docs/path1/docs/path2/bob.md'
+
+    const result = defineWritePath(root, docSection, currentPath)
+
+    expect(`${result.pathName}/${result.fileName}`).toEqual(expected)
+  })
 })

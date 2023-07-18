@@ -3,8 +3,8 @@
 import fs from 'fs/promises'
 
 import { getUserInput } from '../src/cli.js'
-import { defineWritePath, getFilesForPaths } from '../src/fileUtils.js'
-import convertFile from '../src/frontmatter.js'
+import { defineWritePath, getFileContents, getFilesForPaths } from '../src/fileUtils.js'
+import { convertFile } from '../src/frontmatter.js'
 
 const add = async () => {
   try {
@@ -14,7 +14,8 @@ const add = async () => {
 
     const converted = await Promise.all(
       await files.map(async file => {
-        const content = await convertFile(file.filePath)
+        const fileContents = await getFileContents(file.filePath)
+        const content = await convertFile(fileContents, file.filePath)
         return { ...file, content }
       }),
     )

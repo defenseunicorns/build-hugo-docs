@@ -2,9 +2,6 @@ import path from 'path'
 
 import matter from 'gray-matter'
 
-import { getFileContents } from './fileUtils.js'
-import { isEmpty } from './utils.js'
-
 const getWeightFromFileName = fileName => {
   const weight = Number(path.basename(fileName).split('-')[0])
   return Number.isInteger(weight) ? weight : undefined
@@ -18,64 +15,74 @@ const buildFrontMatter = (params = []) => {
   return fm.join('')
 }
 
-const getTitle = (content, inputFile) => {
+const parseHeader = (content, matcher) => {
+  const head = content.find(el => el.match(matcher))
+
+  return head ? head.split(' ').slice(1).join(' ') : ''
+}
+
+const getTitle = (content, data, inputFile) => {
+  const hAny = /^#.+/
   const h1 = /^#\s.+/
-  // const h1 = /^#.+/
 
   try {
     if (content.length < 1) {
       return ['', '']
     }
 
-    const header = content.find(el => el.match(h1))
-    const title = header.replace('# ', '')
+    const h1Header = parseHeader(content, h1)
+    const altHeader = data.title ? data.title : parseHeader(content, hAny)
+    let title = h1Header ? h1Header : altHeader
 
-    const body = content.filter(el => !el.match(header))
+    if (!title.length) {
+      title = 'MISSING TITLE'
+    }
+
+    const body = content.filter(el => !el.match(title))
 
     return [title, body]
   } catch (err) {
-    throw err
+    console.error(`getTitle(${inputFile}) : ${err}`)
   }
 }
 
-const buildFrontmatterValues = (pageTitle, keyList, fileWeight) => {
-  const frontMatterValues = { title: pageTitle }
+const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
+  const frontMatterValues = { ...currentFrontmatter, title: pageTitle }
 
-  if (!isEmpty(fileWeight)) {
-    frontMatterValues.weight = fileWeight
-  }
+  frontMatterValues.weight = 'sidebar_position' in frontMatterValues ? frontMatterValues.sidebar_position : fileWeight
 
-  for (const [key, value] of Object.entries(keyList)) {
-    if (fmList.includes(key)) {
-      frontMatterValues[key] = value
-      continue
-    }
-    if (key === 'sidebar_position') {
-      frontMatterValues['weight'] = value
-    }
-  }
+  frontMatterValues.sidebar_position = undefined
+
+  Object.keys(frontMatterValues).forEach(key =>
+    frontMatterValues[key] === undefined ? delete frontMatterValues[key] : {},
+  )
 
   return frontMatterValues
 }
 
-const convertFile = async inputFile => {
-  const fileContents = await getFileContents(inputFile)
-  const fmData = matter(fileContents)
-  const fileBody = fmData.content.split('\n')
+export const convertFile = async (fileContents, inputFile) => {
+  try {
+    const { content, data } = matter(fileContents)
 
-  const [title, body] = getTitle(fileBody, inputFile)
-  const fileWeight = getWeightFromFileName(inputFile)
+    const fileBody = content.split('\n')
 
-  const frontMatterValues = buildFrontmatterValues(title, fmData.data, fileWeight)
+    const [title, body] = getTitle(fileBody, data, inputFile)
 
-  const frontmatterList = []
-  for (const [key, value] of Object.entries(frontMatterValues)) {
-    frontmatterList.push(`${key}: ${value}\n`)
+    const fileWeight = getWeightFromFileName(inputFile)
+
+    const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
+
+    const frontmatterList = []
+    for (const [key, value] of Object.entries(frontMatterValues)) {
+      frontmatterList.push(`${key}: ${value}\n`)
+    }
+
+    const frontMatter = buildFrontMatter(frontmatterList)
+
+    return `${frontMatter}${body.join('\n')}`
+  } catch (err) {
+    const error = `convertFile(${inputFile})\n${err}`
   }
-
-  const frontMatter = buildFrontMatter(frontmatterList)
-
-  return `${frontMatter}${body.join('\n')}`
 }
 
 const fmList = [
@@ -103,4 +110,3 @@ const fmList = [
   'videos',
   'weight',
 ]
-export default convertFile

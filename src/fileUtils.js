@@ -43,7 +43,7 @@ const getFilesFromDirectory = async directoryPath => {
     )
     return files.filter(file => file.length).flat() // return with empty arrays removed
   } catch (err) {
-    console.error(err)
+    throw err
   }
 }
 
@@ -51,7 +51,7 @@ export const getFileContents = async file => {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
   } catch (err) {
-    console.error(err)
+    throw `getFileContents(${file}) : ${err}`
   }
 }
 
@@ -94,7 +94,11 @@ export const defineWritePath = (outdir, sectionPath, filePath) => {
   const fromFileName = path.basename(filePath)
   const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
 
-  const toPath = path.dirname(filePath).split(`/${sectionPath}/`)[1]
+  // const toPath = path.dirname(filePath).split(`/${sectionPath}/`).slice(1).join('/')
 
-  return { pathName: `${outdir}/${sectionPath}/${toPath}`, fileName: `${toFileName}` }
+  const pathArr = path.dirname(filePath).split('/')
+  const sectionIdx = pathArr.findIndex(el => el === sectionPath)
+  const pathName = `${outdir}/${pathArr.slice(sectionIdx).join('/')}`
+
+  return { pathName, fileName: `${toFileName}` }
 }
