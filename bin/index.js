@@ -2,9 +2,10 @@
 
 import fs from 'fs/promises'
 
-import { getUserInput } from '../src/cli.js'
 import { defineWritePath, getFileContents, getFilesForPaths } from '../src/fileUtils.js'
-import { convertFile } from '../src/frontmatter.js'
+import convertFile from '../src/frontmatter.js'
+import getUserInput from '../src/cli.js'
+import log from '../src/logger.js'
 
 const add = async () => {
   try {
@@ -30,10 +31,10 @@ const add = async () => {
 
       await fs.mkdir(result.pathName, { recursive: true })
       await fs.writeFile(toFile, item.content)
-      console.log(`Created: ${toFile}`)
+      log(`Created: ${toFile}`)
     })
   } catch (err) {
-    console.error(err)
+    log(err, 0)
   }
 }
 

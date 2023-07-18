@@ -1,12 +1,10 @@
-import path from 'path'
-
 import { findUpSync } from 'find-up'
 import fs from 'fs/promises'
+import path from 'path'
 
 const getStartingPath = (configFile = '.hugo-docs.yaml') => {
   const configPath = path.dirname(findUpSync(configFile))
   return configPath
-  // return existsSync(configPath)
 }
 
 const isMarkdownFile = file => {
@@ -25,33 +23,29 @@ const isDir = async (filePath = '') => {
 }
 
 const getFilesFromDirectory = async directoryPath => {
-  try {
-    const filesInDirectory = (await isDir(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
+  const filesInDirectory = (await isDir(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
 
-    const files = await Promise.all(
-      filesInDirectory.map(async file => {
-        const filePath = path.join(directoryPath, file)
+  const files = await Promise.all(
+    filesInDirectory.map(async file => {
+      const filePath = path.join(directoryPath, file)
 
-        if (await isDir(filePath)) {
-          return getFilesFromDirectory(filePath)
-        } else if (isMarkdownFile(filePath)) {
-          return filePath
-        } else {
-          return []
-        }
-      }),
-    )
-    return files.filter(file => file.length).flat() // return with empty arrays removed
-  } catch (err) {
-    throw err
-  }
+      if (await isDir(filePath)) {
+        return getFilesFromDirectory(filePath)
+      }
+      if (isMarkdownFile(filePath)) {
+        return filePath
+      }
+      return []
+    }),
+  )
+  return files.filter(file => file.length).flat() // return with empty arrays removed
 }
 
 export const getFileContents = async file => {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
   } catch (err) {
-    throw `getFileContents(${file}) : ${err}`
+    throw new Error(`getFileContents(${file}) : ${err}`)
   }
 }
 
@@ -85,12 +79,10 @@ export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
     }),
   )
 
-  return await files.flat()
+  return files.flat()
 }
 
 export const defineWritePath = (outdir, sectionPath, filePath) => {
-  const fullPath = `${outdir}/${sectionPath}/${filePath}`
-
   const fromFileName = path.basename(filePath)
   const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
 

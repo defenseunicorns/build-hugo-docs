@@ -1,5 +1,5 @@
 import { getFileContents } from '../src/fileUtils.js'
-import { convertFile } from '../src/frontmatter.js'
+import convertFile from '../src/frontmatter.js'
 
 describe('Updating documentation frontmatter', () => {
   it('should use the first H2 for the title if there is no title and no H1', async () => {

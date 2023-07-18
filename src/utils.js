@@ -1,3 +1,2 @@
-export const isEmpty = val => {
-  return val === undefined || val === null || val.length <= 0 ? true : false
-}
+/* eslint-disable import/prefer-default-export */
+export const isEmpty = val => !!(val === undefined || val === null || val.length <= 0)

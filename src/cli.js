@@ -1,9 +1,8 @@
 import { existsSync, readFileSync } from 'fs'
-
 import { findUpSync } from 'find-up'
+import { hideBin } from 'yargs/helpers'
 import yaml from 'js-yaml'
 import yargs from 'yargs'
-import { hideBin } from 'yargs/helpers'
 
 const getConfigOptions = (path = '.hugo-docs.yaml') => {
   const configPath = findUpSync(path)
@@ -11,13 +10,13 @@ const getConfigOptions = (path = '.hugo-docs.yaml') => {
 }
 
 const format = obj => {
-  const paths = obj.paths
-  const ignores = obj.ignores
-  const outdir = obj.outdir
+  const { paths } = obj
+  const { ignores } = obj
+  const { outdir } = obj
   return [paths, ignores, outdir]
 }
 
-export const getUserInput = () => {
+const getUserInput = () => {
   const args = yargs(hideBin(process.argv))
     .options({
       paths: {
@@ -49,3 +48,5 @@ export const getUserInput = () => {
 
   return { paths, ignores, outdir }
 }
+
+export default getUserInput

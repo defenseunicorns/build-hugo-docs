@@ -1,18 +1,21 @@
-import path from 'path'
-
 import matter from 'gray-matter'
+import path from 'path'
 
 const getWeightFromFileName = fileName => {
   const weight = Number(path.basename(fileName).split('-')[0])
   return Number.isInteger(weight) ? weight : undefined
 }
 
-const buildFrontMatter = (params = []) => {
-  const delim = ['---\n']
+const formatFrontmatter = fields => {
+  const keys = Object.keys(fields)
+  const delim = '---\n'
 
-  const fm = [...delim, ...params, ...delim]
+  const frontmatter = keys.map(key => `${key}: ${fields[key]}\n`)
 
-  return fm.join('')
+  frontmatter.unshift(delim)
+  frontmatter.push(delim)
+
+  return frontmatter.join('')
 }
 
 const parseHeader = content => {
@@ -25,30 +28,22 @@ const parseHeader = content => {
   return [header, headerLevel, oldHeader]
 }
 
-const setTitleAndBody = (content, data, inputFile) => {
-  const hAny = /^#.+/
-  const h1 = /^#\s.+/
-
-  try {
-    if (content.length < 1) {
-      return ['', '']
-    }
-
-    const [header, level, oldHeader] = parseHeader(content, h1)
-    const body = content.filter(el => !el.match(oldHeader))
-
-    if (!header.length && !data.title) {
-      return ['MISSING TITLE', content]
-    }
-
-    if (level === 1) {
-      return [header, body]
-    } else {
-      return [data.title ? data.title : header, body]
-    }
-  } catch (err) {
-    console.error(`setTitleAndBody(${inputFile}) : ${err}`)
+const setTitleAndBody = (content, data) => {
+  if (content.length < 1) {
+    return ['', '']
   }
+
+  const [header, level, oldHeader] = parseHeader(content)
+  const body = content.filter(el => !el.match(oldHeader))
+
+  if (!header.length && !data.title) {
+    return ['MISSING TITLE', content]
+  }
+
+  if (level === 1) {
+    return [header, body]
+  }
+  return [data.title ? data.title : header, body]
 }
 
 const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
@@ -65,53 +60,26 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
   return frontMatterValues
 }
 
-export const convertFile = async (fileContents, inputFile) => {
-  try {
-    const { content, data } = matter(fileContents)
+const convertFile = async (fileContents, inputFile) => {
+  const { content, data } = matter(fileContents)
 
-    const fileBody = content.split('\n')
+  const fileBody = content.split('\n')
 
-    const [title, body] = setTitleAndBody(fileBody, data, inputFile)
+  const [title, body] = setTitleAndBody(fileBody, data)
 
-    const fileWeight = getWeightFromFileName(inputFile)
+  const fileWeight = getWeightFromFileName(inputFile)
 
-    const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
+  const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
 
-    const frontmatterList = []
-    for (const [key, value] of Object.entries(frontMatterValues)) {
-      frontmatterList.push(`${key}: ${value}\n`)
-    }
+  // const frontmatterList = []
 
-    const frontMatter = buildFrontMatter(frontmatterList)
+  // for (const [key, value] of Object.entries(frontMatterValues)) {
+  //   frontmatterList.push(`${key}: ${value}\n`)
+  // }
 
-    return { frontMatter, body }
-  } catch (err) {
-    const error = `convertFile(${inputFile})\n${err}`
-  }
+  const frontMatter = formatFrontmatter(frontMatterValues)
+
+  return { frontMatter, body }
 }
 
-const fmList = [
-  'aliases',
-  'audio',
-  'cascade',
-  'date',
-  'description',
-  'expiryDate',
-  'headless',
-  'images',
-  'isCJKLanguage',
-  'keywords',
-  'lastmod',
-  'layout',
-  'linkTitle',
-  'markup',
-  'outputs',
-  'publishDate',
-  'resources',
-  'slug',
-  'title',
-  'type',
-  'url',
-  'videos',
-  'weight',
-]
+export default convertFile
