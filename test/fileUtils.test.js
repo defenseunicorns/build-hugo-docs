@@ -1,4 +1,4 @@
-import { getFilesForPaths } from '../src/fileUtils'
+import { defineWritePath, getFilesForPaths } from '../src/fileUtils'
 
 describe('Retreiving files to convert', () => {
   it('Should return a list of files to be converted', async () => {
@@ -43,5 +43,27 @@ describe('Error conditions', () => {
   })
   it('Should throw an error of if the input is the incorrect type', async () => {
     await expect(getFilesForPaths('test')).rejects.toThrow()
+  })
+})
+
+describe('Constructing path to save file', () => {
+  it('should begin with the requested output path', () => {
+    const root = 'content'
+    const docSection = 'docs'
+    const currentPath = '/build-hugo-docs/docs/path1/path2/0-understand-the-basics.md'
+    const expected = 'content/docs/path1/path2/0-understand-the-basics.md'
+
+    const result = defineWritePath(root, docSection, currentPath)
+
+    expect(`${result.pathName}/${result.fileName}`).toEqual(expected)
+  })
+  it('should rename index.md to _index.md', () => {
+    const root = 'content'
+    const docSection = 'docs'
+    const currentPath = '/build-hugo-docs/docs/path1/path2/index.md'
+
+    const result = defineWritePath(root, docSection, currentPath)
+
+    expect(result.fileName).toEqual('_index.md')
   })
 })

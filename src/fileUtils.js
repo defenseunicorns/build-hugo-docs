@@ -77,8 +77,6 @@ export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
 
       const found = await getFileList(searchPath, docsPath, ignorePaths)
 
-      console.log(found)
-
       return found.map(filePath => {
         const sectionPath = path.basename(docsPath)
 
@@ -88,4 +86,15 @@ export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
   )
 
   return await files.flat()
+}
+
+export const defineWritePath = (outdir, sectionPath, filePath) => {
+  const fullPath = `${outdir}/${sectionPath}/${filePath}`
+
+  const fromFileName = path.basename(filePath)
+  const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
+
+  const toPath = path.dirname(filePath).split(`/${sectionPath}/`)[1]
+
+  return { pathName: `${outdir}/${sectionPath}/${toPath}`, fileName: `${toFileName}` }
 }

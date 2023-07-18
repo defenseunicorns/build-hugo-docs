@@ -4,4 +4,4 @@ paths:
 ignores:
   - 'test/path1/ignore'
 
-outdir: 'docs'
+outdir: 'content'

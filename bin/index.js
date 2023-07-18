@@ -1,11 +1,9 @@
 #! /usr/bin/env node
 
-import path from 'path'
-
 import fs from 'fs/promises'
 
 import { getUserInput } from '../src/cli.js'
-import { getFilesForPaths } from '../src/fileUtils.js'
+import { defineWritePath, getFilesForPaths } from '../src/fileUtils.js'
 import convertFile from '../src/frontmatter.js'
 
 const add = async () => {
@@ -22,15 +20,13 @@ const add = async () => {
     )
 
     await converted.map(async item => {
-      const fullPath = `${outdir}/${item.sectionPath}/${item.filePath}`
-      const name = path.basename(fullPath) === 'index.md' ? '_index.md' : path.basename(fullPath)
+      const result = defineWritePath(outdir, item.sectionPath, item.filePath)
 
-      const toPath = path.dirname(fullPath)
-      const writePath = `${toPath}/${name}`
+      const toFile = `${result.pathName}/${result.fileName}`
 
-      await fs.mkdir(toPath, { recursive: true })
-      await fs.writeFile(writePath, item.content)
-      console.log(`Creating: ${writePath}`)
+      await fs.mkdir(result.pathName, { recursive: true })
+      await fs.writeFile(toFile, item.content)
+      console.log(`Created: ${toFile}`)
     })
   } catch (err) {
     console.error(err)
