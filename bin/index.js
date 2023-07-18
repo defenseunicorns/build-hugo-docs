@@ -15,7 +15,10 @@ const add = async () => {
     const converted = await Promise.all(
       await files.map(async file => {
         const fileContents = await getFileContents(file.filePath)
-        const content = await convertFile(fileContents, file.filePath)
+        const { frontMatter, body } = await convertFile(fileContents, file.filePath)
+
+        const content = `${frontMatter}${body.join('\n')}`
+
         return { ...file, content }
       }),
     )

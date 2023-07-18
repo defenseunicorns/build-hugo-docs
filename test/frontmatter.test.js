@@ -1,38 +1,54 @@
+import { getFileContents } from '../src/fileUtils.js'
 import { convertFile } from '../src/frontmatter.js'
 
 describe('Updating documentation frontmatter', () => {
   it('should use the first H2 for the title if there is no title and no H1', async () => {
-    const fileContents = `
-## Zarf Git Server
-This package contains the Zarf Git Server
-`
-    const content = await convertFile(fileContents, 'dummyFile')
-    expect(content).toMatch('title: Zarf Git Server')
+    const filePath = 'test/path1/h2Content.md'
+    const fileContents = await getFileContents(filePath)
+
+    const { frontMatter, body } = await convertFile(fileContents, filePath)
+
+    expect(frontMatter).toMatch('title: Zarf Registry')
+    expect(body.length).toBeGreaterThan(0)
   })
 
   it('should not replace an existing title with an H2', async () => {
-    const fileContents = `---\ntitle: Old Title\n---\n
-## Zarf Git Server
-This package contains the Zarf Git Server
-`
-    const content = await convertFile(fileContents, 'dummyFile')
-    expect(content).toMatch('title: Old Title')
+    const filePath = 'test/path1/titleH2Content.md'
+
+    const fileContents = await getFileContents(filePath)
+
+    const { frontMatter, body } = await convertFile(fileContents, filePath)
+    expect(frontMatter).toMatch('title: Old Title')
+    expect(body.length).toBeGreaterThan(0)
   })
 
   it('should replace an existing title with an H1', async () => {
-    const fileContents = `---\ntitle: Old Title\n---\n
-# Zarf Git Server
-This package contains the Zarf Git Server
-`
-    const content = await convertFile(fileContents, 'dummyFile')
-    expect(content).toMatch('title: Zarf Git Server')
+    const filePath = 'test/path1/titleH1Content.md'
+
+    const fileContents = await getFileContents(filePath)
+
+    const { frontMatter, body } = await convertFile(fileContents, filePath)
+    expect(frontMatter).toMatch('title: Zarf Git Server')
+    expect(body.length).toBeGreaterThan(0)
+  })
+
+  it('should use an existing H1 title if there is no frontmatter', async () => {
+    const filePath = 'test/path1/h1Content.md'
+
+    const fileContents = await getFileContents(filePath)
+
+    const { frontMatter, body } = await convertFile(fileContents, filePath)
+    expect(frontMatter).toMatch('title: Zarf Git Server')
+    expect(body.length).toBeGreaterThan(0)
   })
 
   it('should default the title for files that have no headers', async () => {
-    const fileContents = `
-    This package contains the Zarf Git Server
-    `
-    const content = await convertFile(fileContents, 'dummyFile')
-    expect(content).toMatch('title: MISSING TITLE')
+    const filePath = 'test/path1/noHeaderContent.md'
+
+    const fileContents = await getFileContents(filePath)
+
+    const { frontMatter, body } = await convertFile(fileContents, filePath)
+    expect(frontMatter).toMatch('title: MISSING TITLE')
+    expect(body.length).toBeGreaterThan(0)
   })
 })

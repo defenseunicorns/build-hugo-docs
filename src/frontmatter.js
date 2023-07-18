@@ -15,13 +15,17 @@ const buildFrontMatter = (params = []) => {
   return fm.join('')
 }
 
-const parseHeader = (content, matcher) => {
-  const head = content.find(el => el.match(matcher))
+const parseHeader = content => {
+  const hAny = /^#.+/
 
-  return head ? head.split(' ').slice(1).join(' ') : ''
+  const oldHeader = content.find(el => el.match(hAny))
+  const headerLevel = oldHeader ? oldHeader.match(/#/g).length : 1
+  const header = oldHeader ? oldHeader.split(' ').slice(1).join(' ') : ''
+
+  return [header, headerLevel, oldHeader]
 }
 
-const getTitle = (content, data, inputFile) => {
+const setTitleAndBody = (content, data, inputFile) => {
   const hAny = /^#.+/
   const h1 = /^#\s.+/
 
@@ -30,19 +34,20 @@ const getTitle = (content, data, inputFile) => {
       return ['', '']
     }
 
-    const h1Header = parseHeader(content, h1)
-    const altHeader = data.title ? data.title : parseHeader(content, hAny)
-    let title = h1Header ? h1Header : altHeader
+    const [header, level, oldHeader] = parseHeader(content, h1)
+    const body = content.filter(el => !el.match(oldHeader))
 
-    if (!title.length) {
-      title = 'MISSING TITLE'
+    if (!header.length && !data.title) {
+      return ['MISSING TITLE', content]
     }
 
-    const body = content.filter(el => !el.match(title))
-
-    return [title, body]
+    if (level === 1) {
+      return [header, body]
+    } else {
+      return [data.title ? data.title : header, body]
+    }
   } catch (err) {
-    console.error(`getTitle(${inputFile}) : ${err}`)
+    console.error(`setTitleAndBody(${inputFile}) : ${err}`)
   }
 }
 
@@ -66,7 +71,9 @@ export const convertFile = async (fileContents, inputFile) => {
 
     const fileBody = content.split('\n')
 
-    const [title, body] = getTitle(fileBody, data, inputFile)
+    const [title, body] = setTitleAndBody(fileBody, data, inputFile)
+
+    console.log(`${title},\n${body},\n${fileBody}`)
 
     const fileWeight = getWeightFromFileName(inputFile)
 
@@ -79,7 +86,7 @@ export const convertFile = async (fileContents, inputFile) => {
 
     const frontMatter = buildFrontMatter(frontmatterList)
 
-    return `${frontMatter}${body.join('\n')}`
+    return { frontMatter, body }
   } catch (err) {
     const error = `convertFile(${inputFile})\n${err}`
   }
