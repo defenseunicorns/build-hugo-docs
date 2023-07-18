@@ -1,3 +1,5 @@
+import path from 'path'
+
 import matter from 'gray-matter'
 
 import { getFileContents } from './fileUtils.js'
