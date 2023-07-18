@@ -73,8 +73,6 @@ export const convertFile = async (fileContents, inputFile) => {
 
     const [title, body] = setTitleAndBody(fileBody, data, inputFile)
 
-    console.log(`${title},\n${body},\n${fileBody}`)
-
     const fileWeight = getWeightFromFileName(inputFile)
 
     const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
