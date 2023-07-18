@@ -14,7 +14,6 @@ describe('Retreiving files to convert', () => {
     const expPath = 'test/path1/path2/0-u'
 
     const found = files.find(file => file.filePath.includes(testFile))
-    console.log(found)
 
     expect(found.filePath.includes(expPath)).toBe(true)
   })
@@ -22,6 +21,16 @@ describe('Retreiving files to convert', () => {
     const files = await getFilesForPaths(['README.md'])
 
     expect(files.length).toBeGreaterThan(0)
+  })
+  it('should ignore requested paths', async () => {
+    const ignorePath = 'test/path1/ignore'
+
+    const files = await getFilesForPaths(['test'], [ignorePath])
+
+    const found = files.filter(file => {
+      return file.filePath.match(ignorePath)
+    })
+    expect(found.length).toBe(0)
   })
 })
 

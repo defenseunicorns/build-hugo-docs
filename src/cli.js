@@ -12,8 +12,9 @@ const getConfigOptions = (path = '.hugo-docs.yaml') => {
 
 const format = obj => {
   const paths = obj.paths
+  const ignores = obj.ignores
   const outdir = obj.outdir
-  return [paths, outdir]
+  return [paths, ignores, outdir]
 }
 
 export const getUserInput = () => {
@@ -22,6 +23,11 @@ export const getUserInput = () => {
       paths: {
         alias: 'p',
         describe: 'List of paths to search for docs to convert',
+        type: 'array',
+      },
+      ignores: {
+        alias: 'i',
+        describe: 'List of paths to ignore',
         type: 'array',
       },
       outdir: {
@@ -39,7 +45,7 @@ export const getUserInput = () => {
     .implies('outdir', 'paths')
     .conflicts('config', ['paths', 'outdir']).argv
 
-  const [paths, outdir] = !args.paths ? format(getConfigOptions(args.config)) : format(args)
+  const [paths, ignores, outdir] = !args.paths ? format(getConfigOptions(args.config)) : format(args)
 
-  return { paths, outdir }
+  return { paths, ignores, outdir }
 }

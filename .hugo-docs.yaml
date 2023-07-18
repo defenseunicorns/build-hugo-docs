@@ -1,4 +1,7 @@
 paths:
   - 'test'
 
+ignores:
+  - 'test/path1/ignore'
+
 outdir: 'docs'

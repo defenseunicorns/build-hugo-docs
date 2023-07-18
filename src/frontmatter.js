@@ -1,7 +1,12 @@
 import matter from 'gray-matter'
 
-import { getFileContents, getFileWeight } from './fileUtils.js'
+import { getFileContents } from './fileUtils.js'
 import { isEmpty } from './utils.js'
+
+const getWeightFromFileName = fileName => {
+  const weight = Number(path.basename(fileName).split('-')[0])
+  return Number.isInteger(weight) ? weight : undefined
+}
 
 const buildFrontMatter = (params = []) => {
   const delim = ['---\n']
@@ -11,14 +16,24 @@ const buildFrontMatter = (params = []) => {
   return fm.join('')
 }
 
-const getTitle = content => {
+const getTitle = (content, inputFile) => {
   const h1 = /^#\s.+/
+  // const h1 = /^#.+/
 
-  const header = content.find(el => el.match(h1))
-  const title = header.replace('# ', '')
-  const body = content.filter(el => !el.match(header))
+  try {
+    if (content.length < 1) {
+      return ['', '']
+    }
 
-  return [title, body]
+    const header = content.find(el => el.match(h1))
+    const title = header.replace('# ', '')
+
+    const body = content.filter(el => !el.match(header))
+
+    return [title, body]
+  } catch (err) {
+    throw err
+  }
 }
 
 const buildFrontmatterValues = (pageTitle, keyList, fileWeight) => {
@@ -46,8 +61,8 @@ const convertFile = async inputFile => {
   const fmData = matter(fileContents)
   const fileBody = fmData.content.split('\n')
 
-  const [title, body] = getTitle(fileBody)
-  const fileWeight = getFileWeight(inputFile)
+  const [title, body] = getTitle(fileBody, inputFile)
+  const fileWeight = getWeightFromFileName(inputFile)
 
   const frontMatterValues = buildFrontmatterValues(title, fmData.data, fileWeight)
 

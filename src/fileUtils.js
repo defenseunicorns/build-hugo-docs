@@ -55,7 +55,15 @@ export const getFileContents = async file => {
   }
 }
 
-export const getFilesForPaths = async (searchPaths = []) => {
+const getFileList = async (searchPath, docsPath, ignorePaths) => {
+  const files = isMarkdownFile(searchPath) ? [docsPath] : await getFilesFromDirectory(docsPath)
+  return files.filter(file => {
+    ignorePaths.find(el => file.match(el))
+    return !ignorePaths.find(el => file.match(el))
+  })
+}
+
+export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
   if (!Array.isArray(searchPaths) || searchPaths.length < 1) {
     if (searchPaths.length < 1) {
       throw new Error('Invalid number of search paths')
@@ -67,9 +75,10 @@ export const getFilesForPaths = async (searchPaths = []) => {
     searchPaths.map(async searchPath => {
       const docsPath = `${getStartingPath()}/${searchPath}`
 
-      console.log(docsPath)
+      const found = await getFileList(searchPath, docsPath, ignorePaths)
 
-      const found = isMarkdownFile(searchPath) ? [docsPath] : await getFilesFromDirectory(docsPath)
+      console.log(found)
+
       return found.map(filePath => {
         const sectionPath = path.basename(docsPath)
 
@@ -79,9 +88,4 @@ export const getFilesForPaths = async (searchPaths = []) => {
   )
 
   return await files.flat()
-}
-
-export const getFileWeight = fileName => {
-  const weight = Number(path.basename(fileName).split('-')[0])
-  return Number.isInteger(weight) ? weight : undefined
 }
