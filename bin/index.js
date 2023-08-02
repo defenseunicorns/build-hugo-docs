@@ -2,8 +2,8 @@
 
 import fs from 'fs/promises'
 
-import { defineWritePath, getFilesForPaths } from '../src/fileUtils.js'
 import getUserInput from '../src/cli.js'
+import { defineWritePath, getFilesForPaths } from '../src/fileUtils.js'
 import transform from '../src/transform.js'
 
 const add = async () => {
@@ -12,7 +12,7 @@ const add = async () => {
 
     const files = await getFilesForPaths(paths, ignores)
 
-    const converted = transform(files)
+    const converted = await transform(files)
 
     await converted.map(async item => {
       const result = defineWritePath(outdir, item.sectionPath, item.filePath)

@@ -30,8 +30,8 @@ const parseHeader = content => {
 
 /**
  *
- * @param {string} content
- * @returns {string}
+ * @param {string[]} content
+ * @returns {string[]}
  */
 const replaceH1WithH2 = content => {
   const h1 = /^#\s/
