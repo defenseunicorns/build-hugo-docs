@@ -6,7 +6,7 @@ const getWeightFromFileName = fileName => {
   return Number.isInteger(weight) ? weight : undefined
 }
 
-const formatFrontmatter = fields => {
+export const formatFrontmatter = fields => {
   const keys = Object.keys(fields)
   const delim = '---\n'
 
@@ -28,15 +28,38 @@ const parseHeader = content => {
   return [header, headerLevel, oldHeader]
 }
 
+/**
+ *
+ * @param {string} content
+ * @returns {string}
+ */
+const replaceH1WithH2 = content => {
+  const h1 = /^#\s/
+  const h2 = '## '
+
+  return content.map(line => line.replace(h1, h2))
+}
+
+/**
+ *
+ * @param {string} content
+ * @param {{title: string}}  data
+ * @returns {[header: string, body:string]}
+ */
 const setTitleAndBody = (content, data) => {
   if (content.length < 1) {
     return ['', '']
   }
 
+  if (data.title) {
+    const body = replaceH1WithH2(content)
+    return [data.title, body]
+  }
+
   const [header, level, oldHeader] = parseHeader(content)
   const body = content.filter(el => !el.match(oldHeader))
 
-  if (!header.length && !data.title) {
+  if (!header.length) {
     return ['MISSING TITLE', content]
   }
 
@@ -70,12 +93,6 @@ const convertFile = async (fileContents, inputFile) => {
   const fileWeight = getWeightFromFileName(inputFile)
 
   const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
-
-  // const frontmatterList = []
-
-  // for (const [key, value] of Object.entries(frontMatterValues)) {
-  //   frontmatterList.push(`${key}: ${value}\n`)
-  // }
 
   const frontMatter = formatFrontmatter(frontMatterValues)
 

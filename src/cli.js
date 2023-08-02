@@ -6,7 +6,7 @@ import yargs from 'yargs'
 
 const getConfigOptions = (path = '.hugo-docs.yaml') => {
   const configPath = findUpSync(path)
-  return existsSync(configPath) ? yaml.safeLoad(readFileSync(configPath, 'utf-8')) : null
+  return existsSync(configPath) ? yaml.load(readFileSync(configPath, 'utf-8')) : null
 }
 
 const format = obj => {

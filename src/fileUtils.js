@@ -41,6 +41,11 @@ const getFilesFromDirectory = async directoryPath => {
   return files.filter(file => file.length).flat() // return with empty arrays removed
 }
 
+/**
+ *
+ * @param {string} file
+ * @returns {Promise<string>}
+ */
 export const getFileContents = async file => {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
@@ -57,6 +62,12 @@ const getFileList = async (searchPath, docsPath, ignorePaths) => {
   })
 }
 
+/**
+ *
+ * @param {string[]} searchPaths
+ * @param {string[]} ignorePaths
+ * @returns {Promise<{{searchPath: string, sectionPath: string, filePath: string}}>}
+ */
 export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
   if (!Array.isArray(searchPaths) || searchPaths.length < 1) {
     if (searchPaths.length < 1) {

@@ -2,10 +2,9 @@
 
 import fs from 'fs/promises'
 
-import { defineWritePath, getFileContents, getFilesForPaths } from '../src/fileUtils.js'
-import convertFile from '../src/frontmatter.js'
+import { defineWritePath, getFilesForPaths } from '../src/fileUtils.js'
 import getUserInput from '../src/cli.js'
-import log from '../src/logger.js'
+import transform from '../src/transform.js'
 
 const add = async () => {
   try {
@@ -13,16 +12,7 @@ const add = async () => {
 
     const files = await getFilesForPaths(paths, ignores)
 
-    const converted = await Promise.all(
-      await files.map(async file => {
-        const fileContents = await getFileContents(file.filePath)
-        const { frontMatter, body } = await convertFile(fileContents, file.filePath)
-
-        const content = `${frontMatter}${body.join('\n')}`
-
-        return { ...file, content }
-      }),
-    )
+    const converted = transform(files)
 
     await converted.map(async item => {
       const result = defineWritePath(outdir, item.sectionPath, item.filePath)
@@ -31,10 +21,10 @@ const add = async () => {
 
       await fs.mkdir(result.pathName, { recursive: true })
       await fs.writeFile(toFile, item.content)
-      log(`Created: ${toFile}`)
+      console.log(`Created: ${toFile}`)
     })
   } catch (err) {
-    log(err, 0)
+    console.log(err, 0)
   }
 }
 
