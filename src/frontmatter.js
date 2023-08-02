@@ -9,10 +9,12 @@ const getWeightFromFileName = fileName => {
 export const formatFrontmatter = fields => {
   const keys = Object.keys(fields)
   const delim = '---\n'
+  const docType = 'type: docs\n'
 
   const frontmatter = keys.map(key => `${key}: ${fields[key]}\n`)
 
   frontmatter.unshift(delim)
+  frontmatter.push(docType)
   frontmatter.push(delim)
 
   return frontmatter.join('')

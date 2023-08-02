@@ -51,4 +51,11 @@ describe('Updating documentation frontmatter', () => {
     expect(frontMatter).toMatch('title: MISSING TITLE')
     expect(body.length).toBeGreaterThan(0)
   })
+
+  it('should default to type docs', async () => {
+    const filePath = 'test/fixtures/path1/path2/0-zarf-overview.md'
+    const fileContents = await getFileContents(filePath)
+    const { frontMatter } = await convertFile(fileContents, filePath)
+    expect(frontMatter).toMatch('type: docs')
+  })
 })
