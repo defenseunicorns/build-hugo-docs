@@ -1,7 +1,7 @@
-paths:
-  - 'test/fixtures'
+mounts:
+  - source: 'test/fixtures'
+    target: 'content'
+    ignores: ['test/path1/ignore']
 
-ignores:
-  - 'test/path1/ignore'
-
-outdir: 'content'
+  - source: 'test/fixtures'
+    target: 'content2'

@@ -64,31 +64,20 @@ const getFileList = async (searchPath, docsPath, ignorePaths) => {
 
 /**
  *
- * @param {string[]} searchPaths
+ * @param {string[]} searchPath
  * @param {string[]} ignorePaths
  * @returns {Promise<{{searchPath: string, sectionPath: string, filePath: string}}>}
  */
-export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
-  if (!Array.isArray(searchPaths) || searchPaths.length < 1) {
-    if (searchPaths.length < 1) {
-      throw new Error('Invalid number of search paths')
-    }
-    throw new TypeError(`Expected an array, but received a ${typeof searchPaths}`)
-  }
+export const getFilesForPath = async (searchPath = '', ignorePaths = []) => {
+  const docsPath = `${getStartingPath()}/${searchPath}`
 
-  const files = await Promise.all(
-    searchPaths.map(async searchPath => {
-      const docsPath = `${getStartingPath()}/${searchPath}`
+  const found = await getFileList(searchPath, docsPath, ignorePaths)
 
-      const found = await getFileList(searchPath, docsPath, ignorePaths)
+  const files = found.map(filePath => {
+    const sectionPath = path.basename(docsPath)
 
-      return found.map(filePath => {
-        const sectionPath = path.basename(docsPath)
-
-        return { searchPath: docsPath, sectionPath, filePath }
-      })
-    }),
-  )
+    return { searchPath: docsPath, sectionPath, filePath }
+  })
 
   return files.flat()
 }

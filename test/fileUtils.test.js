@@ -1,14 +1,14 @@
-import { defineWritePath, getFilesForPaths } from '../src/fileUtils'
+import { defineWritePath, getFilesForPath } from '../src/fileUtils'
 
 describe('Retreiving files to convert', () => {
   it('Should return a list of files to be converted', async () => {
-    const files = await getFilesForPaths(['test/fixtures'])
+    const files = await getFilesForPath('test/fixtures')
 
     expect(files.length).toBeGreaterThan(0)
   })
 
   it('Should preserve the relative paths', async () => {
-    const files = await getFilesForPaths(['test/fixtures'])
+    const files = await getFilesForPath('test/fixtures')
 
     const testFile = '0-understand-the-basics.md'
     const expPath = 'test/fixtures/path1/path2/0-u'
@@ -18,14 +18,14 @@ describe('Retreiving files to convert', () => {
     expect(found.filePath.includes(expPath)).toBe(true)
   })
   it('should accept files as input', async () => {
-    const files = await getFilesForPaths(['README.md'])
+    const files = await getFilesForPath('README.md')
 
     expect(files.length).toBeGreaterThan(0)
   })
   it('should ignore requested paths', async () => {
     const ignorePath = 'test/fixtures/path1/ignore'
 
-    const files = await getFilesForPaths(['test/fixtures'], [ignorePath])
+    const files = await getFilesForPath('test/fixtures', [ignorePath])
 
     const found = files.filter(file => {
       return file.filePath.match(ignorePath)
@@ -34,13 +34,7 @@ describe('Retreiving files to convert', () => {
   })
 
   it('Should throw an error of if the input is empty', async () => {
-    await expect(getFilesForPaths()).rejects.toThrow()
-  })
-  it('Should throw an error of if the input is an empty array', async () => {
-    await expect(getFilesForPaths([])).rejects.toThrow()
-  })
-  it('Should throw an error of if the input is the incorrect type', async () => {
-    await expect(getFilesForPaths('test')).rejects.toThrow()
+    await expect(getFilesForPath()).rejects.toThrow()
   })
 })
 
