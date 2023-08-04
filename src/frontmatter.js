@@ -82,6 +82,10 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
 
   frontMatterValues.sidebar_position = undefined
 
+  if (frontMatterValues.weight === 0) {
+    frontMatterValues.weight = -1
+  }
+
   Object.keys(frontMatterValues).forEach(key =>
     frontMatterValues[key] === undefined ? delete frontMatterValues[key] : {},
   )
@@ -91,8 +95,6 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
 
 const convertFile = async (fileContents, inputFile) => {
   const { content, data } = matter(fileContents)
-
-  console.log(content, data)
 
   const fileBody = content.split('\n')
 
@@ -104,7 +106,7 @@ const convertFile = async (fileContents, inputFile) => {
 
   const frontMatter = formatFrontmatter(frontMatterValues)
 
-  return { frontMatter, body }
+  return `${frontMatter}${body.join('\n')}`
 }
 
 export default convertFile

@@ -33,6 +33,18 @@ const addMissingIndexMDFile = async files => {
   })
 }
 
+const convertAlerts = body => {
+  const alerts = ['info', 'note', 'caution', 'tip']
+
+  let result = body
+  alerts.forEach(alert => {
+    const re = new RegExp(`(:::${alert})((.|[\n])*?)(:::)`)
+    result = result.replace(re, `{{% alert-${alert} %}}\n$2\n{{% /alert-${alert} %}}`)
+  })
+
+  return result
+}
+
 /**
  *
  * @param {{filePath: string}[]} files
@@ -46,9 +58,9 @@ const transform = async files => {
       let fileContents = await getFileContents(file.filePath)
       fileContents = await addIndexMetadata(file.filePath, fileContents)
 
-      const { frontMatter, body } = await convertFile(fileContents, file.filePath)
+      const body = await convertFile(fileContents, file.filePath)
 
-      const content = `${frontMatter}${body.join('\n')}`
+      const content = convertAlerts(body)
 
       return { filePath: file.filePath, sectionPath: file.sectionPath, content }
     }),
