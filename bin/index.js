@@ -4,7 +4,7 @@
 import fs from 'fs/promises'
 
 import getUserInput from '../src/cli.js'
-import { defineWritePath, getFilesForPath } from '../src/fileUtils.js'
+import { defineWritePath, getDocumentationFiles } from '../src/fileUtils.js'
 import transform from '../src/transform.js'
 
 const add = async () => {
@@ -12,7 +12,7 @@ const add = async () => {
     const mounts = getUserInput()
     await mounts.map(async mount => {
       const { source, target, ignores } = mount
-      const files = await getFilesForPath(source, ignores)
+      const files = await getDocumentationFiles(source, ignores)
       const converted = await transform(files)
 
       await converted.map(async item => {

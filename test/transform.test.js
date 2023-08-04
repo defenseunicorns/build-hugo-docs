@@ -26,3 +26,7 @@ describe('Index files', () => {
     expect(converted[0].content).toMatch('title: Getting Started')
   })
 })
+
+describe('File structure', () => {
+  it('should create an _index.md file if none exists in the path', () => {})
+})

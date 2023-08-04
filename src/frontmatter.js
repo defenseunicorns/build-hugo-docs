@@ -6,18 +6,19 @@ const getWeightFromFileName = fileName => {
   return Number.isInteger(weight) ? weight : undefined
 }
 
+const getUnique = list => new Set(list)
+
 export const formatFrontmatter = fields => {
   const keys = Object.keys(fields)
   const delim = '---\n'
   const docType = 'type: docs\n'
 
-  const frontmatter = keys.map(key => `${key}: ${fields[key]}\n`)
+  const frontmatterList = keys.map(key => `${key}: ${fields[key]}\n`)
+  frontmatterList.push(docType)
 
-  frontmatter.unshift(delim)
-  frontmatter.push(docType)
-  frontmatter.push(delim)
+  const frontmatter = [delim, ...getUnique(frontmatterList), delim].join('')
 
-  return frontmatter.join('')
+  return frontmatter
 }
 
 const parseHeader = content => {

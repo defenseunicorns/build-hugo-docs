@@ -2,27 +2,28 @@ import { findUpSync } from 'find-up'
 import fs from 'fs/promises'
 import path from 'path'
 
-const getStartingPath = (configFile = '.hugo-docs.yaml') => {
+const findRootPath = (configFile = '.hugo-docs.yaml') => {
   const configPath = path.dirname(findUpSync(configFile))
   return configPath
 }
 
-const isMarkdownFile = file => {
-  const mdFiles = /\w+\.md$/
-  return file.match(mdFiles)
-}
+const isMarkdownFile = file => file.match(/\w+\.md$/)
+
+const configToIndex = file => file.replace('_category_.json', 'index.md')
+
+const isDocusaurusConfig = file => file.match('_category_.json')
 
 const isDir = async (filePath = '') => {
   try {
     const stats = await fs.stat(filePath)
     return stats.isDirectory()
   } catch (err) {
-    const error = `isDir(${filePath}): ${JSON.stringify(err, null, 2)}`
+    const error = `isDir(${filePath}): ${JSON.stringify(err, null, 2)}:${stats}`
     throw new Error(error)
   }
 }
 
-const getFilesFromDirectory = async directoryPath => {
+const findFilesInPath = async directoryPath => {
   const filesInDirectory = (await isDir(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
 
   const files = await Promise.all(
@@ -30,11 +31,15 @@ const getFilesFromDirectory = async directoryPath => {
       const filePath = path.join(directoryPath, file)
 
       if (await isDir(filePath)) {
-        return getFilesFromDirectory(filePath)
+        return findFilesInPath(filePath)
       }
       if (isMarkdownFile(filePath)) {
         return filePath
       }
+      if (isDocusaurusConfig(filePath)) {
+        return configToIndex(filePath)
+      }
+
       return []
     }),
   )
@@ -54,12 +59,17 @@ export const getFileContents = async file => {
   }
 }
 
-const getFileList = async (searchPath, docsPath, ignorePaths) => {
-  const files = isMarkdownFile(searchPath) ? [docsPath] : await getFilesFromDirectory(docsPath)
-  return files.filter(file => {
+const removeIgnoredPaths = (files, ignorePaths) =>
+  files.filter(file => {
     ignorePaths.find(el => file.match(el))
     return !ignorePaths.find(el => file.match(el))
   })
+
+const getFileList = async (searchPath, docsPath, ignorePaths) => {
+  const files =
+    isMarkdownFile(searchPath) || isDocusaurusConfig(searchPath) ? [docsPath] : await findFilesInPath(docsPath)
+
+  return removeIgnoredPaths(files, ignorePaths)
 }
 
 /**
@@ -68,8 +78,8 @@ const getFileList = async (searchPath, docsPath, ignorePaths) => {
  * @param {string[]} ignorePaths
  * @returns {Promise<{{searchPath: string, sectionPath: string, filePath: string}}>}
  */
-export const getFilesForPath = async (searchPath = '', ignorePaths = []) => {
-  const docsPath = `${getStartingPath()}/${searchPath}`
+export const getDocumentationFiles = async (searchPath = '', ignorePaths = []) => {
+  const docsPath = `${findRootPath()}/${searchPath}`
 
   const found = await getFileList(searchPath, docsPath, ignorePaths)
 
@@ -85,8 +95,6 @@ export const getFilesForPath = async (searchPath = '', ignorePaths = []) => {
 export const defineWritePath = (outdir, sectionPath, filePath) => {
   const fromFileName = path.basename(filePath)
   const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
-
-  // const toPath = path.dirname(filePath).split(`/${sectionPath}/`).slice(1).join('/')
 
   const pathArr = path.dirname(filePath).split('/')
   const sectionIdx = pathArr.findIndex(el => el === sectionPath)
