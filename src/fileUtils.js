@@ -18,7 +18,7 @@ const isDir = async (filePath = '') => {
     const stats = await fs.stat(filePath)
     return stats.isDirectory()
   } catch (err) {
-    const error = `isDir(${filePath}): ${JSON.stringify(err, null, 2)}:${stats}`
+    const error = `isDir(${filePath}): ${JSON.stringify(err, null, 2)}`
     throw new Error(error)
   }
 }
@@ -94,9 +94,10 @@ export const getDocumentationFiles = async (searchPath = '', ignorePaths = []) =
 
 export const defineWritePath = (outdir, sectionPath, filePath) => {
   const fromFileName = path.basename(filePath)
-  const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
+  const toFileName = fromFileName === 'index.md' || fromFileName === 'README.md' ? '_index.md' : fromFileName
 
   const pathArr = path.dirname(filePath).split('/')
+
   const sectionIdx = pathArr.findIndex(el => el === sectionPath)
   const pathName = `${outdir}/${pathArr.slice(sectionIdx).join('/')}`
 

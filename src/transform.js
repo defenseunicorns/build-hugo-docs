@@ -27,22 +27,10 @@ export const addIndexMetadata = async (filePath, contents) => {
 }
 
 const addMissingIndexMDFile = async files => {
-  //   path.basename(path[, suffix])
-  // path.delimiter
-  // path.dirname(path)
-
   files.forEach(async file => {
     if (file.filePath.match('index.md') && !existsSync(file.filePath))
       await writeFileSync(file.filePath, '', { flag: 'wx' })
   })
-
-  // uniqPaths.forEach(el => {
-  //   const indexFiles = files.filter(
-  //     file => path.dirname(file.filePath) === el && path.basename(file.filePath) === 'index.md',
-  //   )
-  //   if (indexFiles.length() === 0) {
-  //   }
-  // })
 }
 
 /**
@@ -62,7 +50,7 @@ const transform = async files => {
 
       const content = `${frontMatter}${body.join('\n')}`
 
-      return { filePath: file.filePath, content }
+      return { filePath: file.filePath, sectionPath: file.sectionPath, content }
     }),
   )
 }

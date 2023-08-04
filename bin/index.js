@@ -13,6 +13,7 @@ const add = async () => {
     await mounts.map(async mount => {
       const { source, target, ignores } = mount
       const files = await getDocumentationFiles(source, ignores)
+
       const converted = await transform(files)
 
       await converted.map(async item => {
