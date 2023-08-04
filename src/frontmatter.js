@@ -1,7 +1,10 @@
 import matter from 'gray-matter'
 import path from 'path'
 
-const getWeightFromFileName = fileName => {
+const getWeightFromFileName = (fileName, data) => {
+  if (data.weight && Number.isInteger(data.weight)) {
+    return data.weight
+  }
   const weight = Number(path.basename(fileName).split('-')[0])
   return Number.isInteger(weight) ? weight : undefined
 }
@@ -89,11 +92,13 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
 const convertFile = async (fileContents, inputFile) => {
   const { content, data } = matter(fileContents)
 
+  console.log(content, data)
+
   const fileBody = content.split('\n')
 
   const [title, body] = setTitleAndBody(fileBody, data)
 
-  const fileWeight = getWeightFromFileName(inputFile)
+  const fileWeight = getWeightFromFileName(inputFile, data)
 
   const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
 
