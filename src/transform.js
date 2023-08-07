@@ -38,13 +38,52 @@ const convertAlerts = body => {
 
   let result = body
   alerts.forEach(alert => {
-    const re = new RegExp(`(:::${alert})((.|[\n])*?)(:::)`)
-    result = result.replace(re, `{{% alert-${alert} %}}\n$2\n{{% /alert-${alert} %}}`)
+    const re = new RegExp(`(:::${alert})((.|[\n])*?)(:::)`, 'g')
+    result = result.replaceAll(re, `{{% alert-${alert} %}}\n$2\n{{% /alert-${alert} %}}`)
   })
 
   return result
 }
 
+const convertSelectionTabs = body => {
+  const tabBlock = /(<Tabs)((.|[\n])*?)(>)/g
+  const tabItem = /(<TabItem)((.|[\n])*?)(>)/g
+
+  let result = body
+  result = result.replaceAll("'<TabItem ...>'", 'tab')
+  result = result.replaceAll(tabBlock, '{{< tabpane >}}')
+  result = result.replaceAll('</Tabs>', '{{< /tabpane >}}')
+  result = result.replaceAll('</TabItem>', '{{% /tab %}}')
+  result = result.replaceAll(tabItem, '{{% tab $2 %}}')
+  result = result.replaceAll('value=', 'header=')
+  result = result.replaceAll(/(value=")\w+(")/g, '')
+  result = result.replaceAll(/({{% tab)\s+/g, '{{% tab ')
+
+  const isImport = str => {
+    const importToRemove = ['import TabItem from "@theme/TabItem";', 'import Tabs from "@theme/Tabs";']
+    return importToRemove.find(el => str.match(el))
+  }
+
+  const replace = [
+    { from: "'<TabItem ...>'", to: 'tab' },
+    { from: /(<Tabs)((.|[\n])*?)(>)/g, to: '{{< tabpane >}}' },
+    { from: /(<TabItem)((.|[\n])*?)(>)/g, to: '{{% tab $2 %}}' },
+    { from: '</Tabs>', to: '{{< /tabpane >}}' },
+    { from: '</TabItem>', to: '{{% /tab %}}' },
+    { from: 'value=', to: 'header=' },
+    { from: /(value=")\w+(")/g, to: '' },
+    // { from: /({{% tab)\s+/g, to: '{{% tab ' },
+    { from: /(import Tab).+([",'];)/g, to: '' },
+  ]
+
+  replace.forEach(el => {
+    result = result.replaceAll(el.from, el.to)
+  })
+
+  return result
+}
+
+const cleanExtraLF = body => body.replaceAll(/\n{3,}/g, '\n\n')
 /**
  *
  * @param {{filePath: string}[]} files
@@ -58,11 +97,13 @@ const transform = async files => {
       let fileContents = await getFileContents(file.filePath)
       fileContents = await addIndexMetadata(file.filePath, fileContents)
 
-      const body = await convertFile(fileContents, file.filePath)
+      let body = await convertFile(fileContents, file.filePath)
 
-      const content = convertAlerts(body)
+      body = convertAlerts(body)
+      body = convertSelectionTabs(body)
+      body = cleanExtraLF(body)
 
-      return { filePath: file.filePath, sectionPath: file.sectionPath, content }
+      return { filePath: file.filePath, sectionPath: file.sectionPath, content: body }
     }),
   )
 }
