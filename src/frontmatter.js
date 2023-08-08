@@ -14,10 +14,8 @@ const getUnique = list => new Set(list)
 export const formatFrontmatter = fields => {
   const keys = Object.keys(fields)
   const delim = '---\n'
-  const docType = 'type: docs\n'
 
   const frontmatterList = keys.map(key => `${key}: ${fields[key]}\n`)
-  frontmatterList.push(docType)
 
   const frontmatter = [delim, ...getUnique(frontmatterList), delim].join('')
 
@@ -75,8 +73,8 @@ const setTitleAndBody = (content, data) => {
   return [data.title ? data.title : header, body]
 }
 
-const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
-  const frontMatterValues = { ...currentFrontmatter, title: pageTitle }
+const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight, docsRoot, rootTitle) => {
+  let frontMatterValues = { ...currentFrontmatter, title: pageTitle }
 
   frontMatterValues.weight = 'sidebar_position' in frontMatterValues ? frontMatterValues.sidebar_position : fileWeight
 
@@ -86,6 +84,18 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
     frontMatterValues.weight = -1
   }
 
+  frontMatterValues.type = 'docs'
+
+  if (docsRoot) {
+    frontMatterValues = {
+      ...frontMatterValues,
+      weight: undefined,
+      type: undefined,
+      linkTitle: rootTitle,
+      menu: '{ main: { weight: 1 } }',
+    }
+  }
+
   Object.keys(frontMatterValues).forEach(key =>
     frontMatterValues[key] === undefined ? delete frontMatterValues[key] : {},
   )
@@ -93,16 +103,16 @@ const buildFrontmatterValues = (pageTitle, currentFrontmatter, fileWeight) => {
   return frontMatterValues
 }
 
-const convertFile = async (fileContents, inputFile) => {
+const convertFile = async (fileContents, fileInfo) => {
   const { content, data } = matter(fileContents)
 
   const fileBody = content.split('\n')
 
   const [title, body] = setTitleAndBody(fileBody, data)
 
-  const fileWeight = getWeightFromFileName(inputFile, data)
+  const fileWeight = getWeightFromFileName(fileInfo.filePath, data)
 
-  const frontMatterValues = buildFrontmatterValues(title, data, fileWeight)
+  const frontMatterValues = buildFrontmatterValues(title, data, fileWeight, fileInfo.docsRoot, fileInfo.rootTitle)
 
   const frontMatter = formatFrontmatter(frontMatterValues)
 

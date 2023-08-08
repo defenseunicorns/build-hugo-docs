@@ -93,17 +93,17 @@ const transform = async files => {
   await addMissingIndexMDFile(files)
 
   return Promise.all(
-    files.map(async file => {
-      let fileContents = await getFileContents(file.filePath)
-      fileContents = await addIndexMetadata(file.filePath, fileContents)
+    files.map(async fileInfo => {
+      let fileContents = await getFileContents(fileInfo.filePath)
+      fileContents = await addIndexMetadata(fileInfo.filePath, fileContents)
 
-      let body = await convertFile(fileContents, file.filePath)
+      let body = await convertFile(fileContents, fileInfo)
 
       body = convertAlerts(body)
       body = convertSelectionTabs(body)
       body = cleanExtraLF(body)
 
-      return { filePath: file.filePath, sectionPath: file.sectionPath, content: body }
+      return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: body }
     }),
   )
 }

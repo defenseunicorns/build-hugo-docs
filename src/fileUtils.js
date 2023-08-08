@@ -78,23 +78,31 @@ const getFileList = async (searchPath, docsPath, ignorePaths) => {
  * @param {string[]} ignorePaths
  * @returns {Promise<{{searchPath: string, sectionPath: string, filePath: string}}>}
  */
-export const getDocumentationFiles = async (searchPath = '', ignorePaths = []) => {
+export const getDocumentationFiles = async mount => {
+  const searchPath = mount.source || ''
+  const ignorePaths = mount.ignores || []
+
   const docsPath = `${findRootPath()}/${searchPath}`
 
   const found = await getFileList(searchPath, docsPath, ignorePaths)
 
   const files = found.map(filePath => {
     const sectionPath = path.basename(docsPath)
+    const docsRoot = filePath.match(mount.docsRoot) ? mount.docsRoot : null
+    const rootTitle = docsRoot ? mount.rootTitle : null
 
-    return { searchPath: docsPath, sectionPath, filePath }
+    return { searchPath: docsPath, sectionPath, filePath, docsRoot, rootTitle }
   })
 
   return files.flat()
 }
 
-export const defineWritePath = (outdir, sectionPath, filePath) => {
+export const defineWritePath = (outdir, sectionPath, filePath, docsRoot) => {
   const fromFileName = path.basename(filePath)
-  const toFileName = fromFileName === 'index.md' || fromFileName === 'README.md' ? '_index.md' : fromFileName
+  const toFileName =
+    fromFileName === 'index.md' || fromFileName === 'README.md' || fromFileName === docsRoot
+      ? '_index.md'
+      : fromFileName
 
   const pathArr = path.dirname(filePath).split('/')
 

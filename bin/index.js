@@ -11,13 +11,12 @@ const add = async () => {
   try {
     const mounts = getUserInput()
     await mounts.map(async mount => {
-      const { source, target, ignores } = mount
-      const files = await getDocumentationFiles(source, ignores)
+      const files = await getDocumentationFiles(mount)
 
       const converted = await transform(files)
 
       await converted.map(async item => {
-        const result = defineWritePath(target, item.sectionPath, item.filePath)
+        const result = defineWritePath(mount.target, item.sectionPath, item.filePath, mount.docsRoot)
 
         const toFile = `${result.pathName}/${result.fileName}`
 
