@@ -45,24 +45,8 @@ const convertAlerts = body => {
   return result
 }
 
-const convertSelectionTabs = body => {
-  const tabBlock = /(<Tabs)((.|[\n])*?)(>)/g
-  const tabItem = /(<TabItem)((.|[\n])*?)(>)/g
-
+const convertSelectionTabsToShortcodes = body => {
   let result = body
-  result = result.replaceAll("'<TabItem ...>'", 'tab')
-  result = result.replaceAll(tabBlock, '{{< tabpane >}}')
-  result = result.replaceAll('</Tabs>', '{{< /tabpane >}}')
-  result = result.replaceAll('</TabItem>', '{{% /tab %}}')
-  result = result.replaceAll(tabItem, '{{% tab $2 %}}')
-  result = result.replaceAll('value=', 'header=')
-  result = result.replaceAll(/(value=")\w+(")/g, '')
-  result = result.replaceAll(/({{% tab)\s+/g, '{{% tab ')
-
-  const isImport = str => {
-    const importToRemove = ['import TabItem from "@theme/TabItem";', 'import Tabs from "@theme/Tabs";']
-    return importToRemove.find(el => str.match(el))
-  }
 
   const replace = [
     { from: "'<TabItem ...>'", to: 'tab' },
@@ -72,8 +56,24 @@ const convertSelectionTabs = body => {
     { from: '</TabItem>', to: '{{% /tab %}}' },
     { from: 'value=', to: 'header=' },
     { from: /(value=")\w+(")/g, to: '' },
-    // { from: /({{% tab)\s+/g, to: '{{% tab ' },
     { from: /(import Tab).+([",'];)/g, to: '' },
+  ]
+
+  replace.forEach(el => {
+    result = result.replaceAll(el.from, el.to)
+  })
+
+  return result
+}
+
+const convertCodeImportsToShortcodes = body => {
+  const yamlImport = /(<ExampleYAML src={require\('..\/..\/examples)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+
+  let result = body
+
+  const replace = [
+    { from: yamlImport, to: '{{< readfile file="$2" code="true" lang="yaml" >}}' },
+    { from: /(import ExampleYAML).+([",'];)/g, to: '' },
   ]
 
   replace.forEach(el => {
@@ -100,7 +100,8 @@ const transform = async files => {
       let body = await convertFile(fileContents, fileInfo)
 
       body = convertAlerts(body)
-      body = convertSelectionTabs(body)
+      body = convertSelectionTabsToShortcodes(body)
+      // body = convertCodeImportsToShortcodes(body)
       body = cleanExtraLF(body)
 
       return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: body }
