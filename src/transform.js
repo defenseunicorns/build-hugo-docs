@@ -83,6 +83,27 @@ const convertCodeImportsToShortcodes = body => {
   return result
 }
 
+const convertZarfImportsToShortcodes = body => {
+  let result = body
+
+  const replace = [
+    { from: /(<Properties)((.|[\n])*?)(\/>)/g, to: '{{< zarfprops $2 >}}' },
+    { from: /({{< zarfprops)((.|[\n])*?)(invert include)((.|[\n])*?)(>}})/g, to: '{{< zarfprops $2 exclude $5 >}}' },
+    { from: /({{< zarfprops)((.|[\n])*?)({\[)((.|[\n])*?)(]}.+)(>}})/g, to: '{{< zarfprops $2 $5 >}}' },
+    { from: /({{< zarfprops)((.|[\n])*?)(\s=)((.|[\n])*?)(>}})/g, to: '{{< zarfprops $2=$5 >}}' },
+    { from: /({{< zarfprops)((.|[\n])*?)(=\s)((.|[\n])*?)(>}})/g, to: '{{< zarfprops $2=$5 >}}' },
+    { from: /({{< zarfprops)([ ]+)((.|[\n])*?)(>}})/g, to: '{{< zarfprops $3 >}}' },
+    { from: /","/g, to: ',' },
+    { from: /(import Properties).+([",'];)/g, to: '' },
+  ]
+
+  replace.forEach(el => {
+    result = result.replaceAll(el.from, el.to)
+  })
+
+  return result
+}
+
 const cleanExtraLF = body => body.replaceAll(/\n{3,}/g, '\n\n')
 /**
  *
@@ -102,6 +123,7 @@ const transform = async files => {
       body = convertAlerts(body)
       body = convertSelectionTabsToShortcodes(body)
       // body = convertCodeImportsToShortcodes(body)
+      body = convertZarfImportsToShortcodes(body)
       body = cleanExtraLF(body)
 
       return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: body }
