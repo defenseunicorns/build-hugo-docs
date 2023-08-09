@@ -1,7 +1,7 @@
 import { existsSync, writeFileSync } from 'fs'
 import path from 'path'
 
-import { getFileContents } from './fileUtils.js'
+import { getFileContents, isMarkdownFile } from './fileUtils.js'
 import convertFile, { formatFrontmatter } from './frontmatter.js'
 
 const docusaurusConfig = async pathName => {
@@ -50,10 +50,10 @@ const convertSelectionTabsToShortcodes = body => {
 
   const replace = [
     { from: "'<TabItem ...>'", to: 'tab' },
-    { from: /(<Tabs)((.|[\n])*?)(>)/g, to: '{{< tabpane >}}' },
-    { from: /(<TabItem)((.|[\n])*?)(>)/g, to: '{{% tab $2 %}}' },
+    { from: /(<Tabs)((.|[\n])*?)(>)/g, to: '{{< tabpane text=true >}}' },
+    { from: /(<TabItem)((.|[\n])*?)(>)/g, to: '{{< tab $2 >}}' },
     { from: '</Tabs>', to: '{{< /tabpane >}}' },
-    { from: '</TabItem>', to: '{{% /tab %}}' },
+    { from: '</TabItem>', to: '{{< /tab >}}' },
     { from: 'value=', to: 'header=' },
     { from: /(value=")\w+(")/g, to: '' },
     { from: /(import Tab).+([",'];)/g, to: '' },
@@ -67,12 +67,16 @@ const convertSelectionTabsToShortcodes = body => {
 }
 
 const convertCodeImportsToShortcodes = body => {
-  const yamlImport = /(<ExampleYAML src={require\('..\/..\/examples)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const exampleImport = /(<ExampleYAML src={require\('..\/..\/examples)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const packageImport = /(<ExampleYAML src={require\('..\/..\/packages)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const localImport = /(<ExampleYAML src={require\('.\/)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
 
   let result = body
 
   const replace = [
-    { from: yamlImport, to: '{{< readfile file="/examples/$2" code="true" lang="yaml" >}}' },
+    { from: exampleImport, to: '{{< readfile file="/docs/examples$2" code="true" lang="yaml" >}}' },
+    { from: packageImport, to: '{{< readfile file="/packages$2" code="true" lang="yaml" >}}' },
+    { from: localImport, to: '{{< readfile file="$2" code="true" lang="yaml" >}}' },
     { from: /(import ExampleYAML).+([",'];)/g, to: '' },
   ]
 
@@ -118,17 +122,18 @@ const transform = async files => {
   return Promise.all(
     files.map(async fileInfo => {
       let fileContents = await getFileContents(fileInfo.filePath)
-      fileContents = await addIndexMetadata(fileInfo.filePath, fileContents)
+      if (isMarkdownFile(fileInfo.filePath)) {
+        fileContents = await addIndexMetadata(fileInfo.filePath, fileContents)
 
-      let body = await convertFile(fileContents, fileInfo)
+        fileContents = await convertFile(fileContents, fileInfo)
 
-      body = convertAlerts(body)
-      body = convertSelectionTabsToShortcodes(body)
-      body = convertCodeImportsToShortcodes(body)
-      body = convertZarfImportsToShortcodes(body)
-      body = cleanExtraLF(body)
-
-      return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: body }
+        fileContents = convertAlerts(fileContents)
+        fileContents = convertSelectionTabsToShortcodes(fileContents)
+        fileContents = convertCodeImportsToShortcodes(fileContents)
+        fileContents = convertZarfImportsToShortcodes(fileContents)
+        fileContents = cleanExtraLF(fileContents)
+      }
+      return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: fileContents }
     }),
   )
 }
