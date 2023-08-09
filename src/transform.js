@@ -45,6 +45,20 @@ const convertAlerts = body => {
   return result
 }
 
+const convertContributingImport = body => {
+  let result = body
+
+  const replace = [
+    { from: '<Contributing />', to: '{{% readfile file="/CONTRIBUTING.md" %}}' },
+    { from: /(import Contributing).+([",'];)/g, to: '' },
+  ]
+
+  replace.forEach(el => {
+    result = result.replaceAll(el.from, el.to)
+  })
+
+  return result
+}
 const convertSelectionTabsToShortcodes = body => {
   let result = body
 
@@ -131,6 +145,7 @@ const transform = async files => {
         fileContents = convertSelectionTabsToShortcodes(fileContents)
         fileContents = convertCodeImportsToShortcodes(fileContents)
         fileContents = convertZarfImportsToShortcodes(fileContents)
+        fileContents = convertContributingImport(fileContents)
         fileContents = cleanExtraLF(fileContents)
       }
       return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: fileContents }
