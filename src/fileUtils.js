@@ -13,7 +13,9 @@ export const isMarkdownFile = file => file.match(/\w+\.md$/)
 
 const isDocusaurusConfig = file => file.match('_category_.json')
 
-export const isYAMLExample = file => file.match('.yaml')
+export const isZarfConfig = file =>
+  (file.match('.yaml') || file.match('.ini') || file.match('.toml') || file.match('.json')) &&
+  !file.match('_category_.json')
 
 const isDir = async (filePath = '') => {
   try {
@@ -36,7 +38,7 @@ const findFilesInPath = async directoryPath => {
         getDocumentationFiles
         return findFilesInPath(filePath)
       }
-      if (isMarkdownFile(filePath) || isYAMLExample(filePath)) {
+      if (isMarkdownFile(filePath) || isZarfConfig(filePath)) {
         return filePath
       }
       if (isDocusaurusConfig(filePath)) {
@@ -71,7 +73,7 @@ const removeIgnoredPaths = (files, ignorePaths) =>
 
 const getFileList = async (searchPath, docsPath, ignorePaths) => {
   const files =
-    isMarkdownFile(searchPath) || isDocusaurusConfig(searchPath) || isYAMLExample(searchPath)
+    isMarkdownFile(searchPath) || isDocusaurusConfig(searchPath) || isZarfConfig(searchPath)
       ? [docsPath]
       : await findFilesInPath(docsPath)
 
