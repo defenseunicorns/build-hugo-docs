@@ -81,17 +81,23 @@ const convertSelectionTabsToShortcodes = body => {
 }
 
 const convertCodeImportsToShortcodes = body => {
-  const exampleImport = /(<ExampleYAML src={require\('..\/..\/examples)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
-  const packageImport = /(<ExampleYAML src={require\('..\/..\/packages)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
-  const localImport = /(<ExampleYAML src={require\('.\/)((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const exampleImport =
+    /(<ExampleYAML src={require\('..\/..\/examples)((.|[\n])*?)\.((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const packageImport =
+    /(<ExampleYAML src={require\('..\/..\/packages)((.|[\n])*?)\.((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const localImport = /(<ExampleYAML src={require\('.\/)((.|[\n])*?)\.((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
+  const fetchFileCodeBlock =
+    /(<FetchFileCodeBlock src={require\('..\/..\/examples)((.|[\n])*?)\.((.|[\n])*?)('\)})((.|[\n])*?)(\/>)/g
 
   let result = body
 
   const replace = [
-    { from: exampleImport, to: '{{< readfile file="/docs/examples$2" code="true" lang="yaml" >}}' },
-    { from: packageImport, to: '{{< readfile file="/packages$2" code="true" lang="yaml" >}}' },
-    { from: localImport, to: '{{< readfile file="$2" code="true" lang="yaml" >}}' },
+    { from: exampleImport, to: '{{< readfile file="/docs/examples$2.$4" code="true" lang="$4" >}}' },
+    { from: fetchFileCodeBlock, to: '{{< readfile file="/docs/examples$2.$4" code="true" lang="$4" >}}' },
+    { from: packageImport, to: '{{< readfile file="/packages$2.$4" code="true" lang="$4" >}}' },
+    { from: localImport, to: '{{< readfile file="$2.$4" code="true" lang="$4" >}}' },
     { from: /(import ExampleYAML).+([",'];)/g, to: '' },
+    { from: /(import FetchFileCodeBlock).+([",'];)/g, to: '' },
   ]
 
   replace.forEach(el => {
@@ -124,7 +130,7 @@ const convertZarfImportsToShortcodes = body => {
   return result
 }
 
-const cleanExtraLF = body => body.replaceAll(/\n{3,}/g, '\n\n')
+const cleanExtraLF = body => `${body.replaceAll(/\n{3,}/g, '\n\n')}\n`
 /**
  *
  * @param {{filePath: string}[]} files
