@@ -2,15 +2,20 @@ import { findUpSync } from 'find-up'
 import fs from 'fs/promises'
 import path from 'path'
 
-const getStartingPath = (configFile = '.hugo-docs.yaml') => {
+const findRootPath = (configFile = '.hugo-docs.yaml') => {
   const configPath = path.dirname(findUpSync(configFile))
   return configPath
 }
 
-const isMarkdownFile = file => {
-  const mdFiles = /\w+\.md$/
-  return file.match(mdFiles)
-}
+const configToIndex = file => file.replace('_category_.json', 'index.md')
+
+export const isMarkdownFile = file => file.match(/\w+\.md$/)
+
+const isDocusaurusConfig = file => file.match('_category_.json')
+
+export const isZarfConfig = file =>
+  (file.match('.yaml') || file.match('.ini') || file.match('.toml') || file.match('.json')) &&
+  !file.match('_category_.json')
 
 const isDir = async (filePath = '') => {
   try {
@@ -22,7 +27,7 @@ const isDir = async (filePath = '') => {
   }
 }
 
-const getFilesFromDirectory = async directoryPath => {
+const findFilesInPath = async directoryPath => {
   const filesInDirectory = (await isDir(directoryPath)) ? await fs.readdir(directoryPath) : [directoryPath]
 
   const files = await Promise.all(
@@ -30,17 +35,28 @@ const getFilesFromDirectory = async directoryPath => {
       const filePath = path.join(directoryPath, file)
 
       if (await isDir(filePath)) {
-        return getFilesFromDirectory(filePath)
+        getDocumentationFiles
+        return findFilesInPath(filePath)
       }
-      if (isMarkdownFile(filePath)) {
+      if (isMarkdownFile(filePath) || isZarfConfig(filePath)) {
         return filePath
       }
+      if (isDocusaurusConfig(filePath)) {
+        return configToIndex(filePath)
+      }
+
       return []
     }),
   )
+
   return files.filter(file => file.length).flat() // return with empty arrays removed
 }
 
+/**
+ *
+ * @param {string} file
+ * @returns {Promise<string>}
+ */
 export const getFileContents = async file => {
   try {
     return await fs.readFile(file, { encoding: 'utf8' })
@@ -49,46 +65,55 @@ export const getFileContents = async file => {
   }
 }
 
-const getFileList = async (searchPath, docsPath, ignorePaths) => {
-  const files = isMarkdownFile(searchPath) ? [docsPath] : await getFilesFromDirectory(docsPath)
-  return files.filter(file => {
+const removeIgnoredPaths = (files, ignorePaths) =>
+  files.filter(file => {
     ignorePaths.find(el => file.match(el))
     return !ignorePaths.find(el => file.match(el))
   })
+
+const getFileList = async (searchPath, docsPath, ignorePaths) => {
+  const files =
+    isMarkdownFile(searchPath) || isDocusaurusConfig(searchPath) || isZarfConfig(searchPath)
+      ? [docsPath]
+      : await findFilesInPath(docsPath)
+
+  return removeIgnoredPaths(files, ignorePaths)
 }
 
-export const getFilesForPaths = async (searchPaths = [], ignorePaths = []) => {
-  if (!Array.isArray(searchPaths) || searchPaths.length < 1) {
-    if (searchPaths.length < 1) {
-      throw new Error('Invalid number of search paths')
-    }
-    throw new TypeError(`Expected an array, but received a ${typeof searchPaths}`)
-  }
+/**
+ *
+ * @param {string[]} searchPath
+ * @param {string[]} ignorePaths
+ * @returns {Promise<{{searchPath: string, sectionPath: string, filePath: string}}>}
+ */
+export const getDocumentationFiles = async mount => {
+  const searchPath = mount.source || ''
+  const ignorePaths = mount.ignores || []
 
-  const files = await Promise.all(
-    searchPaths.map(async searchPath => {
-      const docsPath = `${getStartingPath()}/${searchPath}`
+  const docsPath = `${findRootPath()}/${searchPath}`
 
-      const found = await getFileList(searchPath, docsPath, ignorePaths)
+  const found = await getFileList(searchPath, docsPath, ignorePaths)
 
-      return found.map(filePath => {
-        const sectionPath = path.basename(docsPath)
+  const files = found.map(filePath => {
+    const sectionPath = path.basename(docsPath)
+    const docsRoot = filePath.match(mount.docsRoot) ? mount.docsRoot : null
+    const rootTitle = docsRoot ? mount.rootTitle : null
 
-        return { searchPath: docsPath, sectionPath, filePath }
-      })
-    }),
-  )
+    return { searchPath: docsPath, sectionPath, filePath, docsRoot, rootTitle }
+  })
 
   return files.flat()
 }
 
-export const defineWritePath = (outdir, sectionPath, filePath) => {
+export const defineWritePath = (outdir, sectionPath, filePath, docsRoot) => {
   const fromFileName = path.basename(filePath)
-  const toFileName = fromFileName === 'index.md' ? '_index.md' : fromFileName
-
-  // const toPath = path.dirname(filePath).split(`/${sectionPath}/`).slice(1).join('/')
+  const toFileName =
+    fromFileName === 'index.md' || fromFileName === 'README.md' || fromFileName === docsRoot
+      ? '_index.md'
+      : fromFileName
 
   const pathArr = path.dirname(filePath).split('/')
+
   const sectionIdx = pathArr.findIndex(el => el === sectionPath)
   const pathName = `${outdir}/${pathArr.slice(sectionIdx).join('/')}`
 

@@ -1,40 +1,32 @@
 #! /usr/bin/env node
+/* eslint-disable no-console */
 
 import fs from 'fs/promises'
 
-import { defineWritePath, getFileContents, getFilesForPaths } from '../src/fileUtils.js'
-import convertFile from '../src/frontmatter.js'
 import getUserInput from '../src/cli.js'
-import log from '../src/logger.js'
+import { defineWritePath, getDocumentationFiles } from '../src/fileUtils.js'
+import transform from '../src/transform.js'
 
 const add = async () => {
   try {
-    const { paths, ignores, outdir } = getUserInput()
+    const mounts = getUserInput()
+    await mounts.map(async mount => {
+      const files = await getDocumentationFiles(mount)
 
-    const files = await getFilesForPaths(paths, ignores)
+      const converted = await transform(files)
 
-    const converted = await Promise.all(
-      await files.map(async file => {
-        const fileContents = await getFileContents(file.filePath)
-        const { frontMatter, body } = await convertFile(fileContents, file.filePath)
+      await converted.map(async item => {
+        const result = defineWritePath(mount.target, item.sectionPath, item.filePath, mount.docsRoot)
 
-        const content = `${frontMatter}${body.join('\n')}`
+        const toFile = `${result.pathName}/${result.fileName}`
 
-        return { ...file, content }
-      }),
-    )
-
-    await converted.map(async item => {
-      const result = defineWritePath(outdir, item.sectionPath, item.filePath)
-
-      const toFile = `${result.pathName}/${result.fileName}`
-
-      await fs.mkdir(result.pathName, { recursive: true })
-      await fs.writeFile(toFile, item.content)
-      log(`Created: ${toFile}`)
+        await fs.mkdir(result.pathName, { recursive: true })
+        await fs.writeFile(toFile, item.content)
+        console.log(`Created: ${toFile}`)
+      })
     })
   } catch (err) {
-    log(err, 0)
+    console.error(err, 0)
   }
 }
 

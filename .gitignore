@@ -1,3 +1,5 @@
 node_modules/
 docs/
 content/
+content2/
+!test/fixtures/docs
