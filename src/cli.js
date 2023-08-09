@@ -1,5 +1,5 @@
-import { findUpSync } from 'find-up'
 import { existsSync, readFileSync } from 'fs'
+import { findUpSync } from 'find-up'
 import yaml from 'js-yaml'
 import yargs from 'yargs'
 import { hideBin } from 'yargs/helpers'

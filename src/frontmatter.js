@@ -1,5 +1,5 @@
-import matter from 'gray-matter'
 import path from 'path'
+import matter from 'gray-matter'
 
 const getWeightFromFileName = (fileName, data) => {
   if (data.weight && Number.isInteger(data.weight)) {

@@ -1,6 +1,6 @@
-import { findUpSync } from 'find-up'
 import fs from 'fs/promises'
 import path from 'path'
+import { findUpSync } from 'find-up'
 
 const findRootPath = (configFile = '.hugo-docs.yaml') => {
   const configPath = path.dirname(findUpSync(configFile))
@@ -35,7 +35,6 @@ const findFilesInPath = async directoryPath => {
       const filePath = path.join(directoryPath, file)
 
       if (await isDir(filePath)) {
-        getDocumentationFiles
         return findFilesInPath(filePath)
       }
       if (isMarkdownFile(filePath) || isZarfConfig(filePath)) {
