@@ -50,9 +50,12 @@ const convertContributingImport = body => {
 
   const replace = [
     { from: '<Contributing />', to: '{{% readfile file="/CONTRIBUTING.md" %}}' },
-    { from: '<ArchitectureSVG />', to: '![Architecture](/includes/architecture.drawio.svg)' },
+    { from: /(<ArchitectureSVG \/>)((.|[\n])*?)(\/>)/g, to: '' },
+    { from: /(<DocCardList )((.|[\n])*?)(\/>)/g, to: '' },
     { from: /(import Contributing).+([",'];)/g, to: '' },
     { from: /(import ArchitectureSVG).+([",'];)/g, to: '' },
+    { from: /(import DocCardList).+([",'];)/g, to: '' },
+    { from: /(import {useCurrentSidebarCategory}).+([",'];)/g, to: '' },
   ]
 
   replace.forEach(el => {
