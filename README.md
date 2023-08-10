@@ -4,4 +4,4 @@ Add as devDependency
 
 Add `.hugo-docs.yaml` config file
 
-run `hugodocs` to do transformtion of Docusaurus to Hugo.
+run `hugodocs` to do the transformation of Docusaurus to Hugo.
