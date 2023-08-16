@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.3](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.2...v0.0.3) (2023-08-16)
+
+
+### Bug Fixes
+
+* update image paths ([fe7ceda](https://github.com/defenseunicorns/build-hugo-docs/commit/fe7ceda560549f0ad8bf02720821c0b23b221402))
+
 ## [0.0.2](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.1...v0.0.2) (2023-08-10)
 
 
