@@ -1,8 +1,8 @@
 import { existsSync, writeFileSync } from 'fs'
 import path from 'path'
 
-import { getFileContents, isMarkdownFile } from './fileUtils.js'
 import convertFile, { formatFrontmatter } from './frontmatter.js'
+import { getFileContents, isMarkdownFile } from './fileUtils.js'
 
 const docusaurusConfig = async pathName => {
   const configPath = `${pathName}/_category_.json`
@@ -112,6 +112,18 @@ const convertCodeImportsToShortcodes = body => {
   return result
 }
 
+const convertImages = body => {
+  let result = body
+
+  const replace = [{ from: /(\(\.images\/)((.|[\n])*?)(\))/g, to: '(/img/$2)' }]
+
+  replace.forEach(el => {
+    result = result.replaceAll(el.from, el.to)
+  })
+
+  return result
+}
+
 const convertZarfImportsToShortcodes = body => {
   let result = body
 
@@ -157,6 +169,7 @@ const transform = async files => {
         fileContents = convertCodeImportsToShortcodes(fileContents)
         fileContents = convertZarfImportsToShortcodes(fileContents)
         fileContents = convertContributingImport(fileContents)
+        fileContents = convertImages(fileContents)
         fileContents = cleanExtraLF(fileContents)
       }
       return { filePath: fileInfo.filePath, sectionPath: fileInfo.sectionPath, content: fileContents }
