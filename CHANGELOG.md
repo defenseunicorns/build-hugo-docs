@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.0.4](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.3...v0.0.4) (2023-08-17)
+
+
+### Bug Fixes
+
+* remove unneeded replacements ([aa8d104](https://github.com/defenseunicorns/build-hugo-docs/commit/aa8d104b51eb1767db072df442c8c674f6bfa1d3))
+
 ## [0.0.3](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.2...v0.0.3) (2023-08-16)
 
 
