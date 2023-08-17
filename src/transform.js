@@ -68,8 +68,12 @@ const convertSelectionTabsToShortcodes = body => {
   let result = body
 
   const replace = [
-    { from: "'<TabItem ...>'", to: 'tab' },
+    { from: /(<!-- NOTE:)((.|[\n])*?)(-->)/g, to: '\n' },
     { from: /(<Tabs)((.|[\n])*?)(>)/g, to: '{{< tabpane text=true >}}' },
+    // {
+    //   from: /(<TabItem)((.|[\n])*?)(>)((.|[\n])*?)(```bash)(((.|[\n])*?))(```)(((.|[\n])*?))(<\/TabItem>)/g,
+    //   to: '{{< tab $2 >}}\n<code>\n$8\n</code>\n{{< /tab >}}',
+    // },
     { from: /(<TabItem)((.|[\n])*?)(>)/g, to: '{{< tab $2 >}}' },
     { from: '</Tabs>', to: '{{< /tabpane >}}' },
     { from: '</TabItem>', to: '{{< /tab >}}' },
