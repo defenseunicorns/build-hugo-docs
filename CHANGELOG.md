@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.0](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.4...v0.1.0) (2023-08-18)
+
+
+### Features
+
+* Ready to use ([58c387e](https://github.com/defenseunicorns/build-hugo-docs/commit/58c387ef02801efc52c580d53a8497372615be94))
+
 ## [0.0.4](https://github.com/defenseunicorns/build-hugo-docs/compare/v0.0.3...v0.0.4) (2023-08-17)
 
 
